@@ -1,4 +1,4 @@
-//cc -D'CONF_DIR="/usr/local/myntc/etc/"' -D'CONF_FILE="myntc.conf"' -O2 -lpcap -lpthread myntcd.c -o myntcd
+//cc -D'CONF_DIR="/usr/local/etc/myntc/"' -D'CONF_FILE="myntc.conf"' -O2 -lpcap -lpthread myntcd.c -o myntcd
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -33,7 +33,7 @@
 #define HASH_SIZE 4096
 
 #if !defined(CONF_DIR)
-#define CONF_DIR "/usr/local/myntc/etc/"
+#define CONF_DIR "/usr/local/etc/myntc/"
 #endif
 
 #if !defined(CONF_FILE)
@@ -48,9 +48,10 @@
 //STRUCT
 struct config {
 	char *pid_file;
-	char *data_file;
+	char *dir;
+	char *prefix;
 	unsigned short int sniff;
-	unsigned short int log_time; // in seconds
+	unsigned short int save_interval; // in seconds
 	struct promisc_device *promisc;
 	struct headerdat *headers;
 	struct my_network8 *mynet8;
@@ -129,17 +130,12 @@ struct my_network16 *mynet_w16 = NULL, *mynet_n16 = NULL;
 struct my_network24 *mynet_w24 = NULL, *mynet_n24 = NULL;
 struct my_network32 *mynet_w32 = NULL, *mynet_n32 = NULL;
 
-//static int capture_sd = -1;  // egyenlore nem hasznaljuk sehol
-
 unsigned short int IP_ICMP = 0;
 unsigned short int IP_TCP = 0;
 unsigned short int IP_UDP = 0;
 
 struct config *cfg;
 volatile int running = 0;
-// Amig nem hasznaljuk oket
-// static struct ipdata *plist[HASH_SIZE]; // data being collected
-// static struct ipdata *olist[HASH_SIZE]; // data being written
 
 volatile time_t start_log, now; // current time
 
@@ -182,7 +178,6 @@ void process_options(int argc, char *argv[]);
 // FUNCTIONS
 
 char *intoa(unsigned long addr) {
-	// meg nem jottem ra hogy miert nem jo ez a fuggveny helyett az inet_ntoa
 	static char buff[18];
 	char *p = (char *) &addr;
 	sprintf(buff, "%d.%d.%d.%d",(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
@@ -190,56 +185,56 @@ char *intoa(unsigned long addr) {
 }
 
 void err_quit(void) {
-	// hiba tortent es kileptunk
+	// hibauzenet.
 	fprintf(stderr, "myntcd didn't start. Read syslog.\n");
 }
 
 struct config *read_config(char *fname) {
 	char buff[1024], *out_text=NULL;
-	// ez lesz itten a config fileunk
+	// config file
 	FILE *cf; 
 	unsigned short int line=0;
-	// ez meg a konfiguraciot tarolo strukturara mutato pointer
+	// a konfiguraciot tarolo strukturara mutato pointer
 	struct config *new_cfg = malloc(sizeof(struct config));
-	// sikertelen memoriafoglalas eseten ritorn null
+	// sikertelen memoriafoglalas eseten return null
 	if(new_cfg  == NULL) return new_cfg ; 
-	// feltoltjuk az ertekeket, nagyon jo
+	// feltoltjuk az ertekeket
 	new_cfg -> pid_file = NULL; 
-	new_cfg -> data_file = NULL;
+	new_cfg -> dir = NULL;
+	new_cfg -> prefix = NULL;
 	new_cfg -> sniff = 0;
-	new_cfg -> log_time = 0;
+	new_cfg -> save_interval = 0;
 	new_cfg -> promisc = NULL;
 	new_cfg -> headers = NULL;
 	new_cfg -> mynet32 = NULL;
 	new_cfg -> mynet24 = NULL;
 	new_cfg -> mynet16 = NULL;
 	new_cfg -> mynet8 = NULL;
-	// konfigfile olvasasra megnyit
+	// konfigfilet olvasasra megnyit
 	cf=fopen(fname,"r"); 
 	if(cf == NULL) return NULL;
 
 	while(fgets(buff,sizeof(buff),cf)) {
-		// lezuzzuk a sorvege karaktereket
+		// kitoroljuk a sorvege karaktereket
 		char *cmt = strchr(buff,'\n'); 
 		if(cmt) *cmt = '\0';
 		line++;
-		// meg a kommenteket is
+		// kitoroljuk a kommenteket is
 		cmt = strchr(buff,'#');
 		if(cmt) *cmt = '\0';
-		// meg a vezeto wajtszpeszeket
+		// kitoroljuk a vezeto whitespacekat is
 		while(isspace(*buff)) {
 			memmove(buff,buff+1,strlen(buff));
 		}
-		// meg lekilleljuk a sor vegi whitespaceket is
+		// kitoroljuk a sor vegi whitespaceket is
 		cmt = strchr(buff,'\0');
 		cmt --;
 		while(isspace(*cmt)) {
 			*cmt = '\0';
 			cmt --;
 		}
-		// nem ures sorokat feldolgozgatjuk
+		// nem ures sorokat feldolgozzuk
 		if(*buff) {
-			// jo fejek vagyunk hogy a kod kozepen deklaralunk valtozot, ez a reformkonyha :)
 			char *kwd = buff; 
 			char *value = buff + strcspn(buff," \t");
 			*value++ = '\0';
@@ -285,92 +280,116 @@ struct config *read_config(char *fname) {
 				unsigned char c1,c2,c3,c4;
 				unsigned char m1,m2,m3,m4;
 				char *p;
-				unsigned long ipaddr, mask=0xffffffff ;
-				//struct my_network *tmp;
+				unsigned long ipaddr, mask;
 
-				c1 = strtol(strtok(value,"."),0,0);
-				c2 = strtol(strtok(NULL,"."),0,0);
-				c3 = strtol(strtok(NULL,"."),0,0);
-				c4 = strtol(strtok(NULL,"/"),0,0);
-				p=strtok(NULL,".");
-				if (p!=NULL) {
-					while(isspace(*p)) p++;
-					m1 = strtol(p,0,0);
-					if (strlen(p)<=2) {
-						mask=mask>>(32-m1);
-					} else {
-						m2 = strtol(strtok(NULL,"."),0,0);
-						m3 = strtol(strtok(NULL,"."),0,0);
-						m4 = strtol(strtok(NULL,"."),0,0);
-						mask = htonl((m1 << 24) | (m2 << 16) | (m3 << 8) | m4);
-					}
+
+				char **ip=(char**)malloc(sizeof(char*));
+				int ipk=0;
+				char *temp, *temp2;
+				temp = temp2 = value;
+
+				while (1)  {
+					while (*temp!='\t' && *temp!=' ' && *temp!='\0') temp++;
+					ip = (char**)realloc(ip,++ipk*sizeof(char*));
+					ip[ipk-1] = (char*)strndup(temp2, temp-temp2);
+					while(isspace(*temp)) temp++;
+					temp2 = temp;
+					if (temp-value==strlen(value)) break;
 				}
-				ipaddr = htonl((c1 << 24) | (c2 << 16) | (c3 << 8) | c4);
-				p=(char *) &mask;
-				if (mask >= htonl(0xff000000)) {
-					if (mask >= htonl(0xffff0000)) {
-						if (mask >= htonl(0xffffff00)) {
-							if (mask == htonl(0xffffffff)) {
-								// /32 mask
-								struct my_network32 *tmp;
-								tmp = malloc(sizeof(struct my_network32));
-								if(tmp != NULL) {
-									tmp->addr = ipaddr;
-									tmp->mask = mask;
-									tmp->next = new_cfg->mynet32;
-									new_cfg->mynet32 = tmp;
-									out_text = strdup(intoa(tmp->addr));
-									syslog(LOG_DEBUG,"config: added mynetwork %s/%s, %li/%li",out_text, intoa(tmp->mask), tmp->addr, tmp->mask);
+
+				int i;
+				for (i=0; i<ipk; i++) {
+					mask=0xffffffff ;
+
+					c1 = strtol(strtok(ip[i],"."),0,0);
+					c2 = strtol(strtok(NULL,"."),0,0);
+					c3 = strtol(strtok(NULL,"."),0,0);
+					c4 = strtol(strtok(NULL,"/"),0,0);
+	
+					p=strtok(NULL,".");
+					if (p!=NULL) {
+						while(isspace(*p)) p++;
+						m1 = strtol(p,0,0);
+						if (strlen(p)<=2) {
+							mask=mask>>(32-m1);
+						} else {
+							m2 = strtol(strtok(NULL,"."),0,0);
+							m3 = strtol(strtok(NULL,"."),0,0);
+							m4 = strtol(strtok(NULL,"."),0,0);
+							mask = htonl((m1 << 24) | (m2 << 16) | (m3 << 8) | m4);
+						}
+					}
+					ipaddr = htonl((c1 << 24) | (c2 << 16) | (c3 << 8) | c4);
+					p=(char *) &mask;
+
+					if (mask >= htonl(0xff000000)) {
+						if (mask >= htonl(0xffff0000)) {
+							if (mask >= htonl(0xffffff00)) {
+								if (mask == htonl(0xffffffff)) {
+									// /32 mask
+									struct my_network32 *tmp;
+									tmp = malloc(sizeof(struct my_network32));
+									if(tmp != NULL) {
+										tmp->addr = ipaddr;
+										tmp->mask = mask;
+										tmp->next = new_cfg->mynet32;
+										new_cfg->mynet32 = tmp;
+										out_text = strdup(intoa(tmp->addr));
+										syslog(LOG_DEBUG,"config: added mynetwork %s/%s, %li/%li",out_text, intoa(tmp->mask), tmp->addr, tmp->mask);
+									}
+								} else {
+									// /24 mask
+									struct my_network24 *tmp;
+									tmp = malloc(sizeof(struct my_network24));
+									if(tmp != NULL) {
+										tmp->addr = ipaddr;
+										tmp->mask = mask;
+										tmp->next = new_cfg->mynet24;
+										new_cfg->mynet24 = tmp;
+										out_text = strdup(intoa(tmp->addr));
+										syslog(LOG_DEBUG,"config: added mynetwork %s/%s, %li/%li",out_text, intoa(tmp->mask), tmp->addr, tmp->mask);
+									}
 								}
 							} else {
-								// /24 mask
-								struct my_network24 *tmp;
-								tmp = malloc(sizeof(struct my_network24));
+								// /16 mask
+								struct my_network16 *tmp;
+								tmp = malloc(sizeof(struct my_network16));
 								if(tmp != NULL) {
 									tmp->addr = ipaddr;
 									tmp->mask = mask;
-									tmp->next = new_cfg->mynet24;
-									new_cfg->mynet24 = tmp;
+									tmp->next = new_cfg->mynet16;
+									new_cfg->mynet16 = tmp;
 									out_text = strdup(intoa(tmp->addr));
 									syslog(LOG_DEBUG,"config: added mynetwork %s/%s, %li/%li",out_text, intoa(tmp->mask), tmp->addr, tmp->mask);
 								}
 							}
 						} else {
-							// /16 mask
-							struct my_network16 *tmp;
-							tmp = malloc(sizeof(struct my_network16));
+							// /8 mask
+							struct my_network8 *tmp;
+							tmp = malloc(sizeof(struct my_network8));
 							if(tmp != NULL) {
 								tmp->addr = ipaddr;
 								tmp->mask = mask;
-								tmp->next = new_cfg->mynet16;
-								new_cfg->mynet16 = tmp;
+								tmp->next = new_cfg->mynet8;
+								new_cfg->mynet8 = tmp;
 								out_text = strdup(intoa(tmp->addr));
 								syslog(LOG_DEBUG,"config: added mynetwork %s/%s, %li/%li",out_text, intoa(tmp->mask), tmp->addr, tmp->mask);
 							}
 						}
-					} else {
-						// /8 mask
-						struct my_network8 *tmp;
-						tmp = malloc(sizeof(struct my_network8));
-						if(tmp != NULL) {
-							tmp->addr = ipaddr;
-							tmp->mask = mask;
-							tmp->next = new_cfg->mynet8;
-							new_cfg->mynet8 = tmp;
-							out_text = strdup(intoa(tmp->addr));
-							syslog(LOG_DEBUG,"config: added mynetwork %s/%s, %li/%li",out_text, intoa(tmp->mask), tmp->addr, tmp->mask);
-						}
 					}
 				}
-			} else if(strcasecmp(kwd, "log_time")==0) {
-				new_cfg -> log_time = atoi(value)*60;
-				syslog(LOG_DEBUG,"config: set log time: %d\n",new_cfg -> log_time);
-			} else if(strcasecmp(kwd, "pid_file")==0) {
+			} else if(strcasecmp(kwd, "save_interval")==0) {
+				new_cfg -> save_interval = atoi(value);
+				syslog(LOG_DEBUG,"config: set save interval: %d\n",new_cfg -> save_interval);
+			} else if(strcasecmp(kwd, "pid")==0) {
 				new_cfg->pid_file = strdup(value);
 				syslog(LOG_DEBUG,"config: set pid filename to %s\n",new_cfg->pid_file);
-			} else if(strcasecmp(kwd, "data_file")==0) {
-				new_cfg->data_file = strdup(value);
-				syslog(LOG_DEBUG,"config: set data filename to %s\n",new_cfg->data_file);
+			} else if(strcasecmp(kwd, "dir")==0) {
+				new_cfg->dir = strdup(value);
+				syslog(LOG_DEBUG,"config: set data directori to %s\n",new_cfg->prefix);
+			} else if(strcasecmp(kwd, "prefix")==0) {
+				new_cfg->prefix = strdup(value);
+				syslog(LOG_DEBUG,"config: set data filename to %s\n",new_cfg->prefix);
 			}
 		}
 	}
@@ -393,8 +412,8 @@ struct config *read_config(char *fname) {
 		return NULL;
 	}
 
-	if(new_cfg->data_file == NULL) {
-		syslog(LOG_ERR, "config file: no data file given\n");
+	if(new_cfg->prefix == NULL) {
+		syslog(LOG_ERR, "config file: no prefix given\n");
 		err_quit();
 		return NULL;
 	}
@@ -530,9 +549,6 @@ void init_cfg (struct config *init_cfg) {
 
 void exit_cfg (struct config *exit_cfg) {
 	if (exit_cfg) {
-		// a kovetkezokben egy rahedli memoriat felszabaditunk
-		// attol fuggoen hogy a konfiguracio szerint mekkora
-		// cimtartomanyt oriznek, nem reszletezem evidens
 		if (exit_cfg->mynet8) {
 			struct my_network8 *p1, *p2;
 			for(p1=exit_cfg->mynet8;p1;p1=p2) {
@@ -562,7 +578,8 @@ void exit_cfg (struct config *exit_cfg) {
 			}
 		}
 		free(exit_cfg->pid_file);
-		free(exit_cfg->data_file);
+		free(exit_cfg->dir);
+		free(exit_cfg->prefix);
 		free(exit_cfg->headers->name);
 		free(exit_cfg->headers);
 		free(exit_cfg->promisc->name);
@@ -591,21 +608,21 @@ void exit_cfg (struct config *exit_cfg) {
 
 void reload_config(int sig) {
 	struct config *old_cfg, *new_cfg;
-	// megmondjuk a sysolognak hogy ujratoltodunk
+	// megmondjuk a sysolognak, hogy ujratoltodunk
 	syslog(LOG_INFO,"Re-Load config file!\n");
 	// a jelenlegi konfigot attoltjuk old_cfg-be
 	old_cfg = cfg;
 	// az ujat meg beolvassuk a configfilebol
 	new_cfg = read_config(fname);
-	// ervenyesitjuk 
+	// ervenyesitjuk
 	init_cfg(new_cfg);
 	// leallitjuk a csomaglopast
 	exit_capture();
 	// frissitjuk az aktualis konfigot
 	cfg=new_cfg;
-	// es folytatjuk a lopkodast, mintha mise tortent volna
+	// es folytatjuk a lopkodast
 	init_capture();
-	// persze azert kiirjuk az adatainkat is
+	// kiirjuk az adatainkat is
 	write_data(old_cfg, start_log, time(NULL));
 	// felszabaditjuk a regi konfiguracionak foglalt helyet
 	exit_cfg(old_cfg);
@@ -616,12 +633,12 @@ void init_capture(void) {
 	p = cfg -> promisc;
 	// megnyitjuk az interfacenket
 	if (p!=NULL) {
-		// promisc mod rulez
+		// promisc mod
 		pds = pcap_open_live(p -> name,PCAP_SNAPLEN, cfg->sniff, PCAP_TMOUT, perrbuff);
 		if(pds == NULL) {
-			// ha nem megy, azt tudnia kell a lognak is
+			// ha nem megy, azt tudatjuk
 			syslog(LOG_ERR, "can't pcap_open_live: %s\n", perrbuff);
-			// sot, le is allunk
+			// majd kilepunk
 			daemon_stop(0);
 		}
 	}
@@ -631,17 +648,15 @@ void exit_capture(void) {
 	if(pds != NULL) {
 		// koszonjuk szepen nem kerunk tobb csomagot
 		pcap_close(pds);
-		// ez meg itten a jo oreg packet interfacenk elkussoltatsa
+		// ez meg itten a jo oreg packet interfacenk leallitasa
 		pds = NULL;
 	}
 }
 
 void do_acct(void) {
-	//int i;
 	struct promisc_device *p;
 	p = cfg -> promisc;
 
-//	max_err_delay = cfg -> err_delay;
 	start_log = now = time(NULL);
 	alarm(1);
 	running=1;
@@ -758,8 +773,8 @@ void clear_count(void *myn) {
 void register_packet_tcp(unsigned long int src,unsigned long int dst, int size) {
 	unsigned char *sp, *dp;
 
-	sp = (char *) &src;
-	dp = (char *) &dst;
+	sp = (unsigned char *) &src;
+	dp = (unsigned char *) &dst;
 
 	if (cfg->mynet32) {
 		struct my_network32 *p;
@@ -849,8 +864,8 @@ void register_packet_tcp(unsigned long int src,unsigned long int dst, int size) 
 void register_packet_udp(unsigned long int src,unsigned long int dst, int size) {
 	unsigned char *sp, *dp;
 
-	sp = (char *) &src;
-	dp = (char *) &dst;
+	sp = (unsigned char *) &src;
+	dp = (unsigned char *) &dst;
 
 	if (cfg->mynet32) {
 		struct my_network32 *p;
@@ -941,8 +956,8 @@ void register_packet_udp(unsigned long int src,unsigned long int dst, int size) 
 void register_packet_icmp(unsigned long int src,unsigned long int dst, int size) {
 	unsigned char *sp, *dp;
 
-	sp = (char *) &src;
-	dp = (char *) &dst;
+	sp = (unsigned char *) &src;
+	dp = (unsigned char *) &dst;
 
 	if (cfg->mynet32) {
 		struct my_network32 *p;
@@ -1033,8 +1048,8 @@ void register_packet_icmp(unsigned long int src,unsigned long int dst, int size)
 void register_packet_other(unsigned long int src,unsigned long int dst, int size) {
 	unsigned char *sp, *dp;
 
-	sp = (char *) &src;
-	dp = (char *) &dst;
+	sp = (unsigned char *) &src;
+	dp = (unsigned char *) &dst;
 
 	if (cfg->mynet32) {
 		struct my_network32 *p;
@@ -1123,7 +1138,7 @@ void register_packet_other(unsigned long int src,unsigned long int dst, int size
 }
 
 void handle_frame (unsigned char buf[], int length) {
-	// ez lesz itt az ip csomagunk, a tobbi kommentezve van, mert az ip csomibol tudni fogjuk hogy mik azok
+	// ez lesz itt az ip csomagunk, a tobbi kommentezve van, mert az ip csomagbol tudni fogjuk hogy mik azok
 	// ugyanez a helyzet a portokkal
 	static struct ip tmp_iphdr; 
 	//struct tcphdr tmp_tcphdr;  
@@ -1132,11 +1147,11 @@ void handle_frame (unsigned char buf[], int length) {
 	//unsigned short srcport, dstport;
 
 	if(buf[12] * 256 + buf[13] == ETHERTYPE_IP) {
-		// hogyha a csomagunk fejlecebol kiderult hogy ip csomaggal van dolgunk, akkor kimasoljuk az anyagot belole
+		// hogyha a csomagunk fejlecebol kiderult hogy ip csomaggal van dolgunk, akkor kimasoljuk az infot belole
 		memcpy (&tmp_iphdr, &(buf[14]), sizeof (tmp_iphdr));
 		switch(tmp_iphdr.ip_p) {  
 			case IPPROTO_UDP:
-				// aztan regisztraljuk a csomit ha kiderul belole hogy udp csomag
+				// aztan regisztraljuk a csomagot ha kiderul, hogy udp csomag
 				register_packet_udp(tmp_iphdr.ip_src.s_addr,tmp_iphdr.ip_dst.s_addr, ntohs(tmp_iphdr.ip_len));
 			break;
 			case IPPROTO_TCP:
@@ -1144,11 +1159,11 @@ void handle_frame (unsigned char buf[], int length) {
 				register_packet_tcp(tmp_iphdr.ip_src.s_addr,tmp_iphdr.ip_dst.s_addr, ntohs(tmp_iphdr.ip_len));
 			break;
 			case IPPROTO_ICMP:
-				// az icmp se rossz
+				// vagy icmp
 				register_packet_icmp(tmp_iphdr.ip_src.s_addr,tmp_iphdr.ip_dst.s_addr, ntohs(tmp_iphdr.ip_len));
 			break;
 			default:
-				// ha meg mas nem hat kisnyul
+				// ha egyik sem
 				register_packet_other(tmp_iphdr.ip_src.s_addr,tmp_iphdr.ip_dst.s_addr, ntohs(tmp_iphdr.ip_len));
 			break;
 		}
@@ -1158,10 +1173,10 @@ void handle_frame (unsigned char buf[], int length) {
 void do_packet(u_char *usr, const struct pcap_pkthdr *h, const u_char *p) {
 	// zaroljuk a mutexunket
 	pthread_mutex_lock(&pt_lock);
-	// lekezeljuk a jo kis framet
-	handle_frame((char *)p, h->len);
+	// lekezeljuk a framet
+	handle_frame((unsigned char *)p, h->len);
 	pthread_mutex_unlock(&pt_lock);
-	// aztan meg feloldjuk
+	// majd feloldjuk
 }
 
 void *packet_loop(void *threadid) {
@@ -1181,9 +1196,9 @@ void *packet_loop(void *threadid) {
 }
 
 int do_pid_file(void) {
-// return 1 ha letre lehet hozni a filet
-// return 0 ha a demon mar fut
-// ettol meg lehetnek versenyhelyzetek, de elkerulhetjuk oket kis munkaval
+	// return 1 ha letre lehet hozni a filet
+	// return 0 ha a demon mar fut
+	// ettol meg lehetnek versenyhelyzetek, de elkerulhetjuk oket kis munkaval
 	// ez lesz itten a pid fileunk
 	FILE *f; 
 	if(access(cfg->pid_file, F_OK) == 0) {
@@ -1192,13 +1207,11 @@ int do_pid_file(void) {
 		// a file mar letezik, ezert csak olvasasra nyitjuk meg
 		f = fopen(cfg->pid_file, "r");
 		fgets(buff, sizeof(buff), f);
-		// meg jol be is zarjuk, de elotte kimentettuk a pidet belule, hogy tudjuk ki kell megbuntetni :)
+		// meg zarjuk, de elotte kimentettuk a pidet belole
 		fclose(f);
 		// konvertaljuk int-be
 		pid = atoi(buff);
-		// meg kohogunk is errol a syslognak
 		syslog(LOG_INFO, "found pid-file with pid %d\n", pid);
-		// most jonnek a szadomazo jatekok a szabadon futkoso daemonokkal
 		if(kill(pid, 0) == -1) {
 			syslog(LOG_INFO, "process %d doesn't exist anymore\n", pid);
 		} else {
@@ -1206,13 +1219,12 @@ int do_pid_file(void) {
 			return 0;
 		}
 	}
-	// most nekilatunk a munkanak es megnyitjuk megint a pidfilet irasra
+	// most megnyitjuk pid filet irasra
 	f = fopen(cfg->pid_file, "w");
 	// es beleirjuk a mi pidunket
 	fprintf(f, "%d\n", (int) getpid());
-	// aztan jol bezarjuk
+	// bezarjuk
 	fclose(f);
-	// byebye
 	return 1;
 }
 
@@ -1221,16 +1233,16 @@ int daemon_start(void) {
 	pid_t pid;
 	// daemonizalas indul
 	if( (pid = fork()) < 0) 
-		// ha nem sikerul a forkolas akkor szopas
+		// ha nem sikerul a forkolas akkor kilepes
 		return(-1);
 	else if (pid!=0) 
-		// ha megis akkor a csajld process kilep
+		// ha megis akkor a child procesz kilep
 		exit(0);
 	closelog();
 	for(i=0; i<FD_SETSIZE; i++)
-		// bezarunk egy halom fileleirot, ilyen stdin, stdout szerusegeket
+		// bezarunk egy halom file leirot, ilyen stdin, stdout szerusegeket
 		close(i);
-	// mink vaguynk a session leaderek
+	// mink vagyunk a session leaderek
 	setsid();
 	return 0;
 }
@@ -1238,7 +1250,6 @@ int daemon_start(void) {
 void daemon_stop(int sig) {
 	// toroljuk a pid filet
 	unlink(cfg->pid_file);
-	// meg rizsazunk a logba
 	syslog(LOG_INFO, "Myntcd daemon terminating (%d)\n",sig);
 	// befejezzunk a csomaglopast
 	exit_capture();
@@ -1248,7 +1259,7 @@ void daemon_stop(int sig) {
 	}
 	// logolast is abbahagyjuk
 	closelog();
-	// a kardunkba dolunk
+	// kilepunk
 	exit(1);
 }
 
@@ -1258,11 +1269,11 @@ void write_data(struct config *conf, time_t stime, time_t ltime) {
 	unsigned char *ipc;
 	unsigned long ipn;
 
-	//strcpy(dfname, cfg->data_file);
+	//strcpy(dfname, cfg->prefix);
 	if (0 == strftime(tf, 255, "%Y_%m_%d_%H_%M_%S", localtime(&ltime))) {
-		sprintf(dfname,"%s.dat",conf->data_file);
+		sprintf(dfname, "%s/%s.dat", conf->dir, conf->prefix);
 	} else {
-		sprintf(dfname,"%s.%s.dat",conf->data_file,tf);
+		sprintf(dfname, "%s/%s.%s.dat", conf->dir, conf->prefix, tf);
 	}
 	df = fopen(dfname, "w");
 	fprintf(df,"%d %d\n", (int)stime,(int)ltime);
@@ -1308,7 +1319,7 @@ void write_data(struct config *conf, time_t stime, time_t ltime) {
 			memcpy (mynet_w24, p, sizeof(struct my_network24));
 			memcpy (p, mynet_n24, sizeof(struct my_network24));
 			ipn = p->addr;
-			ipc = (char *) &ipn;
+			ipc = (unsigned char *) &ipn;
 			for (ip = 0; ip<=255; ip++) {
 				ipc[3] = (char) ip;
 				if ((0!=mynet_w24->in[ip].t_count + mynet_w24->in[ip].u_count + mynet_w24->in[ip].i_count + mynet_w24->in[ip].o_count + mynet_w24->out[ip].t_count + mynet_w24->out[ip].u_count + mynet_w24->out[ip].i_count + mynet_w24->out[ip].o_count)) {
@@ -1343,7 +1354,7 @@ void write_data(struct config *conf, time_t stime, time_t ltime) {
 			memcpy (mynet_w16, p, sizeof(struct my_network16));
 			memcpy (p, mynet_n16, sizeof(struct my_network16));
 			ipn = p->addr;
-			ipc = (char *) &ipn;
+			ipc = (unsigned char *) &ipn;
 			for (ip1 = 0; ip1<=255; ip1++) {
 				ipc[2] = (char) ip1;
 				for (ip2 = 0; ip2<=255; ip2++) {
@@ -1381,7 +1392,7 @@ void write_data(struct config *conf, time_t stime, time_t ltime) {
 			memcpy (mynet_w8, p, sizeof(struct my_network8));
 			memcpy (p, mynet_n8, sizeof(struct my_network8));
 			ipn = p->addr;
-			ipc = (char *) &ipn;
+			ipc = (unsigned char *) &ipn;
 			for (ip1 = 0; ip1<=255; ip1++) {
 				ipc[1] = (char) ip1;
 				for (ip2 = 0; ip2<=255; ip2++) {
@@ -1429,14 +1440,13 @@ void alarm_handler(int sig) {
 				// de a legutobbi "most" ota meg nem telt el 2 mp
 				syslog(LOG_INFO, "got signal  %d, ignoring\n",sig);
 			}
-			// a most az legyen most es ne kesobb :)
+			// a most az legyen most
 			now = nnow;
 		}
-		// most ellenoriztunk baze!
 		last_check = now;
 	}
-	if(!(now % cfg->log_time) && (cfg -> log_time != 0)) {
-		// ha itt az ido, akkor adatokat irjunk ki
+	if(!(now % cfg->save_interval) && (cfg -> save_interval != 0)) {
+		// ha itt az ido, akkor adatokat irjuk ki
 		write_data(cfg, start_log, now);
 	}
 	// 1 mp mulva probald ujra
@@ -1447,7 +1457,7 @@ void alarm_handler(int sig) {
                                 sa.sa_flags = fla; \
                                 sigaction(sig, &sa, NULL);
 void signal_ignore(int sig) {
-	// ez itt a leszarjuk-a-bejovo-szignalt fuggveny :)
+	// bejovo signalokat figyelmen kivul hagyjuk
 	syslog(LOG_INFO, "got signal  %d, ignoring\n",sig);
 }
 
@@ -1465,7 +1475,7 @@ void signal_setup(void) {
 	SETSIG(SIGALRM, alarm_handler, 0);
 	SETSIG(SIGUSR1, reload_config, 0);
 
-	// ez meg itt arra figyelmeztet ha a gyermekprocessunk kilepett
+	// ez meg itt arra figyelmeztet ha a gyermek processunk kilepett
 //	SETSIG(SIGCHLD, child_finished, 0);
 }
 
@@ -1480,20 +1490,20 @@ void process_options(int argc, char **argv) {
 	fname = strdup(CONFIG);
 	
 	while ((c = getopt( argc, argv, "c:d" )) != EOF) { 
-		// parsikaljuk a command line opciokat
+		// ertelmezzuk a command line opciokat
 		switch (c) {
 		case 'c':
-			// modositsuk a configfilet
+			// modositsuk a configfilet helyet
 			free(fname);
 			fname = strdup(optarg); 
 		break;
 		case 'd':
-			// meg demonkent akarjuk futtatni a cuccost
+			// meg demonkent akarjuk futtatni a programot
 			daem = 0; 
 		break;
 		case '?': 
 		default:
-			// helpet is kerunk
+			// help
 			usage();
 			exit(1);
 		}
@@ -1503,7 +1513,7 @@ void process_options(int argc, char **argv) {
 	argv += optind;
 
 	if (argc > 1) {
-		// megmondjuk hogy hogy kell hasznalni a stuffot mert az jo
+		// megmondjuk hogy hogy kell hasznalni a programot
 		usage(); 
 		exit(1);
 	}
@@ -1517,7 +1527,7 @@ int main(int argc, char **argv) {
 	// effective user id megkaparintasa
 	if(geteuid() != 0) {
 		syslog(LOG_ERR, "must be superuser to run nacctd\n");
-		// ha nem root vagy akkor huzzal innen
+		// ha nem rootkent van inditva akkor kilepunk
 		exit(1); 
 	}
 	// parancssori parameterek feldolgozasa
@@ -1534,7 +1544,6 @@ int main(int argc, char **argv) {
 				openlog("myntcd", 0, LOG_DAEMON);
 				syslog(LOG_INFO, "Myntcd daemon forked\n");
 			} else {
-				// buzi hibauzenet
 				syslog(LOG_ERR, "couldn't fork: %m\n");
 				syslog(LOG_INFO, "Myntcd daemon aborting\n");
 				exit(1);
@@ -1544,7 +1553,6 @@ int main(int argc, char **argv) {
 			syslog(LOG_INFO, "Start myntcd console mode. %s\n", fname);
 		}
 		if(!do_pid_file()) { 
-			    
 			syslog(LOG_ERR, "daemon already running or stale pid-file\n");
 			exit(1);
 		}
@@ -1553,7 +1561,7 @@ int main(int argc, char **argv) {
 		signal_setup();
 		// aztan meg a csomagokat is ellopjuk
 		init_capture();
-		// es elkezdjuk az accountingot is, mert az jo
+		// es elkezdjuk az accountingot is
 		do_acct();
 		// aztan kilepunk belole
  		exit_capture();
