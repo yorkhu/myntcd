@@ -1,13 +1,14 @@
 #!/bin/sh
 #
-# /etc/init.d/myntcd start/stop/restart myntcd
+# /etc/init.d/myntcd start/stop/restart
 #
-#cd /etc/init.d majd update-rc.d -f myntcd defaults
+# Debian:
+# cd /etc/init.d majd update-rc.d -f myntcd defaults
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/myntc/bin/myntcd
 PIDFILE=/usr/local/myntc/bin/myntcd.pid
-CONFIG=/usr/local/myntc/etc/myntcd.conf
+CONFIG=/usr/local/etc/myntc/myntcd.conf
 NAME=myntcd
 DESC="My Network Traffic Counter"
 
