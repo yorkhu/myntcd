@@ -1,4 +1,4 @@
-//cc -D'CONF_DIR="/usr/local/etc/myntc/"' -D'CONF_FILE="myntc.conf"' -O2 -lpcap -lpthread myntcd.c -o myntcd
+//cc -D'CONF_DIR="/usr/local/etc/myntcd/"' -D'CONF_FILE="myntcd.conf"' -O2 -lpcap -lpthread myntcd.c -o myntcd
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -33,7 +33,7 @@
 #define HASH_SIZE 4096
 
 #if !defined(CONF_DIR)
-#define CONF_DIR "/usr/local/etc/myntc/"
+#define CONF_DIR "/usr/local/etc/myntcd/"
 #endif
 
 #if !defined(CONF_FILE)
@@ -386,10 +386,10 @@ struct config *read_config(char *fname) {
 				syslog(LOG_DEBUG,"config: set pid filename to %s\n",new_cfg->pid_file);
 			} else if(strcasecmp(kwd, "dir")==0) {
 				new_cfg->dir = strdup(value);
-				syslog(LOG_DEBUG,"config: set data directori to %s\n",new_cfg->prefix);
+				syslog(LOG_DEBUG,"config: set data directory to %s\n",new_cfg->dir);
 			} else if(strcasecmp(kwd, "prefix")==0) {
 				new_cfg->prefix = strdup(value);
-				syslog(LOG_DEBUG,"config: set data filename to %s\n",new_cfg->prefix);
+				syslog(LOG_DEBUG,"config: set data filename prefix to %s\n",new_cfg->prefix);
 			}
 		}
 	}
