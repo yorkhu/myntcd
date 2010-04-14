@@ -1,0 +1,32 @@
+<?php
+/*
+ * Created on 2009.01.02.
+ */
+
+/**
+ * Valid permissions for this module
+ * @return array An array of valid permissions for the myntcd module
+ */
+function sysadminmenu_perm() {
+	return array('system administration');
+} // function sysadminmenu_perm()
+
+/**
+ * sysadminmenu_menu: menus
+ */
+function sysadminmenu_menu() {
+
+	/** Administrator menus, System admin*/
+	$items['admin/sysadmin'] = array(
+		'title' => 'System Administration',
+		'description' => 'System Administration.',
+		'position' => 'right',
+		'page callback' => 'system_admin_menu_block_page',
+		'access arguments' => array('system administration'),
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module', 'system'),
+	);
+	return $items;
+} // function sysadminmenu_menu()
+
+

@@ -1,0 +1,337 @@
+# $Id$
+#
+# Hungarian translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  myntcd.module: n/a
+#  myntcd.info,v 0.1 2009/01/02 13:21:54 martoni
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-01-06 15:25+0100\n"
+"PO-Revision-Date: 2009-01-06 15:25+0100\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Hungarian <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: myntcd.module:16
+msgid "My Network Traffic Counter Daemon"
+msgstr "My Network Traffic Counter Daemon"
+
+#: myntcd.module:434
+msgid "Mysql Server Settings"
+msgstr "Mysql Szerver Beállítás"
+
+#: myntcd.module:442;1292;2625
+msgid "Type"
+msgstr "Típus"
+
+#: myntcd.module:447
+msgid "Host"
+msgstr "Hoszt"
+
+#: myntcd.module:456
+msgid "Port"
+msgstr "Port"
+
+#: myntcd.module:465
+msgid "Database name"
+msgstr "Adatbázis név"
+
+#: myntcd.module:473
+msgid "Username"
+msgstr "Felhasználói név"
+
+#: myntcd.module:481
+msgid "Password"
+msgstr "Jelszó"
+
+#: myntcd.module:489
+msgid "RRD Tool settings"
+msgstr "RRD Tool beállítás"
+
+#: myntcd.module:496
+msgid "RRD command"
+msgstr "RRD parancs"
+
+#: myntcd.module:505
+msgid "RRD file dir"
+msgstr "RRD fájlok könyvtára"
+
+#: myntcd.module:514;2406;2451;2539;2583;2645
+msgid "Save"
+msgstr "Mentés"
+
+#: myntcd.module:571
+msgid "The IP address transfer blocking: !date"
+msgstr "Az IP cím forgalma blokkolva: !date"
+
+#: myntcd.module:843;1926
+msgid "Total traffic:"
+msgstr "Teljes forgalom:"
+
+#: myntcd.module:878;1285
+msgid "!title (!date)"
+msgstr "!title (!date)"
+
+#: myntcd.module:880
+msgid "My ip: %IP"
+msgstr "Én ip-m: %IP"
+
+#: myntcd.module:883;1291
+msgid "Time"
+msgstr "Idő"
+
+#: myntcd.module:884;1296;1701;1786;2330
+msgid "In Byte"
+msgstr "Bejövő Adat"
+
+#: myntcd.module:885;1297;1702;1787;2331
+msgid "Out Byte"
+msgstr "Kimenő Adat"
+
+#: myntcd.module:886;1298;1703;1788;2332
+msgid "Total Byte"
+msgstr "Összes Adat"
+
+#: myntcd.module:887;1299;1704;1789;2333
+msgid "Out%"
+msgstr "Kimenő%"
+
+#: myntcd.module:953
+msgid "Ip address"
+msgstr "Ip cím"
+
+#: myntcd.module:958
+msgid "Jump"
+msgstr "Ugrás"
+
+#: myntcd.module:965;2653
+msgid "Is not IP address."
+msgstr "Nem IP cím"
+
+#: myntcd.module:1195;1216;1237;1258;1600;1622;1644;1666;2241;2261;2281;2301
+msgid "previous"
+msgstr "előző"
+
+#: myntcd.module:1201;1222;1243;1264;1606;1628;1650;1672;2247;2267;2287;2307
+msgid "next"
+msgstr "következő"
+
+#: myntcd.module:1287
+msgid "IP Address: !IP"
+msgstr "IP Cím: !IP"
+
+#: myntcd.module:1293
+msgid "In Packet"
+msgstr "Bejövő Csomag"
+
+#: myntcd.module:1294
+msgid "Out Packet"
+msgstr "Kimenő Csomag"
+
+#: myntcd.module:1295
+msgid "Total Packet"
+msgstr "Összes Csomag"
+
+#: myntcd.module:1335;1700;1785;2329;2425;2558;2617
+msgid "IP Address"
+msgstr "IP cím"
+
+#: myntcd.module:1336
+msgid "Operations"
+msgstr "Műveletek"
+
+#: myntcd.module:1341
+msgid "All"
+msgstr "Összes"
+
+#: myntcd.module:1342;1350;75;158;213;265
+msgid "Daily"
+msgstr "Napi"
+
+#: myntcd.module:1343;1351;84;167;222;274
+msgid "Weekly"
+msgstr "Heti"
+
+#: myntcd.module:1344;1352;93;176;231;283
+msgid "Monthly"
+msgstr "Havi"
+
+#: myntcd.module:1345;1353;102;185;240;292
+msgid "Yearly"
+msgstr "Évi"
+
+#: myntcd.module:1694
+msgid "all"
+msgstr "összes"
+
+#: myntcd.module:1697
+msgid "IP Range traffic: !iprange (!date)"
+msgstr "IP Tartomány forgalma: !iprange (!date)"
+
+#: myntcd.module:1791
+msgid "Daily Top !num total byte"
+msgstr "Napi Top !num összes adat"
+
+#: myntcd.module:1795
+msgid "Monthly Top !num total byte"
+msgstr "Havi Top !num összes adat"
+
+#: myntcd.module:1799
+msgid "Yearly Top !num total byte"
+msgstr "Évi Top !num összes adat"
+
+#: myntcd.module:2383;2521;2633
+msgid "for ever"
+msgstr "mindig"
+
+#: myntcd.module:2401;2477
+msgid "Add Whitelist"
+msgstr "Hozzáadás Fehérlistához"
+
+#: myntcd.module:2411;2465;2544;2597
+msgid "Delete"
+msgstr "Törlés"
+
+#: myntcd.module:2426;2559
+msgid "End date"
+msgstr "Lejárat ideje"
+
+#: myntcd.module:2427;2560;2639
+msgid "Comment"
+msgstr "Hozzászólás"
+
+#: myntcd.module:2626;310
+msgid "Blacklist"
+msgstr "Feketelista"
+
+#: myntcd.module:2626;319
+msgid "Whitelist"
+msgstr "Fehérlista"
+
+#: myntcd.module:2632
+msgid "Time interval"
+msgstr "Idő intervallum"
+
+#: myntcd.module:2633;2633;2633
+msgid "day"
+msgstr "nap"
+
+#: myntcd.module:2633;2633
+msgid "week"
+msgstr "hét"
+
+#: myntcd.module:2633
+msgid "month"
+msgstr "hónap"
+
+#: myntcd.module:2696
+msgid "In"
+msgstr "Bejövő"
+
+#: myntcd.module:2699
+msgid "Out"
+msgstr "Kimenő"
+
+#: myntcd.module:2702
+msgid "Total"
+msgstr "Összes"
+
+#: myntcd.module:2759
+msgid "Other"
+msgstr "Egyéb"
+
+#: myntcd.module:2763
+msgid "ICMP"
+msgstr "ICMP"
+
+#: myntcd.module:2767
+msgid "TCP"
+msgstr "TCP"
+
+#: myntcd.module:2771
+msgid "UDP"
+msgstr "UDP"
+
+#: myntcd.module:41
+msgid "my traffic"
+msgstr "forgalmam"
+
+#: myntcd.module:41
+msgid "traffic manager"
+msgstr "forgalom manager"
+
+#: myntcd.module:41
+msgid "traffic administer"
+msgstr "forgalom adminisztrátor"
+
+#: myntcd.module:41
+msgid "myntcd administer"
+msgstr "myntcd adminisztrátor"
+
+#: myntcd.module:52
+msgid "Myntcd settings"
+msgstr "Myntcd beállítások"
+
+#: myntcd.module:60
+msgid "My Traffic"
+msgstr "Forgalmam"
+
+#: myntcd.module:67;149;257
+msgid "Summary"
+msgstr "Kivonat"
+
+#: myntcd.module:112
+msgid "MyImg"
+msgstr "MyImg"
+
+#: myntcd.module:121
+msgid "Myntcd"
+msgstr "Myntcd"
+
+#: myntcd.module:130
+msgid "Img"
+msgstr "Kép"
+
+#: myntcd.module:140
+msgid "!ip"
+msgstr "!ip"
+
+#: myntcd.module:195
+msgid "IP Ranges"
+msgstr "IP Tartomány"
+
+#: myntcd.module:204
+msgid "!iprange"
+msgstr "!iprange"
+
+#: myntcd.module:250
+msgid "Top Lists"
+msgstr "Top Listák"
+
+#: myntcd.module:302
+msgid "Filter"
+msgstr "Szűrő"
+
+#: myntcd.module:328
+msgid "Add filter"
+msgstr "Szűrő hozzáadás"
+
+#: myntcd.module:0
+msgid "myntcd"
+msgstr "myntcd"
+
+#: myntcd.info:0
+msgid "MyNTCD"
+msgstr "MyNTCD"
+
+#: myntcd.info:0
+msgid "My Network Traffic Counter Daemon web base frontend."
+msgstr "My Network Traffic Counter Daemon web-es felülete."
+

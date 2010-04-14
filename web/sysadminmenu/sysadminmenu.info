@@ -1,0 +1,11 @@
+; $Id: myntcd.info,v 0.1 2009/01/02 13:21:54 martoni Exp $
+name = SysAdminMenu
+description = System administration menu.
+core = 6.x
+
+; Information added by drupal.org packaging script on 2009-01-02
+version = "6.x-0.1"
+core = "6.x"
+project = "sysadminmenu"
+datestamp = "1230902514"
+
