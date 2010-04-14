@@ -6,9 +6,9 @@
 # cd /etc/init.d majd update-rc.d -f myntcd defaults
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/local/myntc/bin/myntcd
-PIDFILE=/usr/local/myntc/bin/myntcd.pid
-CONFIG=/usr/local/etc/myntc/myntcd.conf
+DAEMON=/usr/local/myntcd/bin/myntcd
+PIDFILE=/usr/local/myntcd/bin/myntcd.pid
+CONFIG=/usr/local/etc/myntcd/myntcd.conf
 NAME=myntcd
 DESC="My Network Traffic Counter"
 
