@@ -12,27 +12,29 @@ keresztul el lehet erni.
 1. A program hasznalatahoz es telepiteshez szukseges csomagok:
 - libpcap0.7-dev vagy libpcap0.8-dev
 - automake
-- php, php pear-db, php-mysql vagy php-pgsql
+- rrdtool
+- php
 - webszerver
-- drupal 4.7b4 vagy ujabb
-- Megfelelo SQL szerver
+- drupal 6.x
+- Csak MySQL szerver tamogatott sajnos
 
 2. Kicsomagolas, elokeszuletek:
- $ tar -xvvzf myntcd-0.7.0.tar.gz
+ $ tar -xvvzf myntcd-0.9.0.tar.gz
  MySql adatbazis letrehozasa.
- $ cd myntcd-0.7.0/docs
+ $ cd myntcd-0.9.0/docs
  $ mysql -u root -p < mysql.sql
  Mysql felhasznalo letrehozasa:
  - myntcd felhasznalo tudja irni/olvasni a traffic adatbazist
    GRANT ALL PRIVILEGES ON `traffic` . * TO 'myntcd'@'localhost' IDENTIFIED BY 'myntcd_pass'
 
 3. Telepites:
+3.1. Daemon telepitese:
  A program telepitesehez rendszergazda jogokkal kell rendelkeznunk:
  # ./install.sh
  # cat install.sh
   
  #!/bin/sh
-  
+
  cd daemon/
  ./autostuff
  ./configure
@@ -42,30 +44,32 @@ keresztul el lehet erni.
  mkdir -p /usr/local/myntcd/data
  mkdir -p /usr/local/myntcd/rrd
  mkdir -p /usr/local/etc/myntcd
-  
+
  cd ..
  cp bin/* /usr/local/myntcd/bin/
  cp daemon/src/myntcd /usr/local/myntcd/bin/
  cp docs /usr/local/myntcd/
- cp etc/myntcd/* /usr/local/etc/myntcd/
- cp etc/init.d/myntcd /etc/init.d/
+ ln -s /etc/myntcd /usr/local/etc/myntcd
 
+ # innen debian specifikus
+ cp etc/init.d/myntcd /etc/init.d/
  cd /etc/init.d/
  update-rc.d myntcd defaults
  cd -
  #END FILE
  
- Drupal modul telepitese:
+3.2 Drupal modul telepitese:
  
- cp web /var/www/drupal/modules/myntcd
+# cp -r myntcd /var/www/drupal/sites/all/modules/myntcd
+# cp -r sysadminmenu /var/www/drupal/sites/all/modules/sysadminmenu
 
 4. Utolso simitasok:
 
 Cron beallitasa.
  Daemon kimenetenek feldolgozasa:
- 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntc/bin/myntc.php
- Szurolistak aktivalasa:
- 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntc/bin/blacklist.php
+ 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntcd/bin/myntc.php
+ Szuro aktivalasa:
+ 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntcd/bin/blacklist.php
 
 Drupal modul beallitasa.
- Link: http://localhost/drupal/?q=admin/settings/myntcd
+ Link: http://localhost/drupal/?q=admin/sysadmin/myntcd
