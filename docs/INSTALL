@@ -1,54 +1,71 @@
-Telepitesi utmutato.
+Myntcd v. 0.7.0 telepitesi utmutato.
 
-A program 3 fo reszbol all:
- 1. Myntcd daemon, forgalom szamlalo.
- 2. A daemon kimenetet feldolgozo scriptek.
- 3. Webes megjelenites.
+Ez az utmutato GNU Debian linux operaciosrendszer es mysql adatbazis
+szerverhez keszult.
+A telepites barmely mas linux/unix szeru operacios rendszeren elvegezheto.
+A myntcd tamogat minden olyan sql szervert, melyet pear-db es drupalon
+keresztul el lehet erni.
 
-1. Myntcd daemon telepitese.
-Szukseges programok: libpcap0.7-dev vagy libpcap0.8-dev
-	# cd myntcd/
-	# ./configure
-	# make
-	# make install                                (/usr/local/sbin/myntcd)
-init.d telepitese.
-	# cd ../etc/
-	# cp myntcd /etc/init.d/
-	# cd /etc/init.d
-	# update-rc.d myntcd defaults
-A konfig file pedig keruljon a /usr/local/etc konyvtarba.
+0. Myntcd Licensze:
+  GNU GPL v2.0
 
-2. Kimenetet feldolgozo scriptek telepitese.
-Szukseges programok: mysql-server, php4-cli, php4-mysql, rrdtools, netcat.
-	# cd tools
-	# mysql -u root -p < ../docs/mysql.sql
-Mysql felhasznalo(k) letrehozasa.
+1. A program hasznalatahoz es telepiteshez szukseges csomagok:
+- libpcap0.7-dev vagy libpcap0.8-dev
+- automake
+- php, php pear-db, php-mysql vagy php-pgsql
+- webszerver
+- drupal 4.7b4 vagy ujabb
+- Megfelelo SQL szerver
 
-	# cp * /usr/local/sbin/
+2. Kicsomagolas, elokeszuletek:
+ $ tar -xvvzf myntcd-0.7.0.tar.gz
+ MySql adatbazis letrehozasa.
+ $ cd myntcd-0.7.0/docs
+ $ mysql -u root -p < mysql.sql
+ Mysql felhasznalo letrehozasa:
+ - myntcd felhasznalo tudja irni/olvasni a traffic adatbazist
+   GRANT ALL PRIVILEGES ON `traffic` . * TO 'myntcd'@'localhost' IDENTIFIED BY 'myntcd_pass'
+
+3. Telepites:
+ A program telepitesehez rendszergazda jogokkal kell rendelkeznunk:
+ # ./install.sh
+ # cat install.sh
+  
+ #!/bin/sh
+  
+ cd daemon/
+ ./autostuff
+ ./configure
+ make
+
+ mkdir -p /usr/local/myntcd/bin
+ mkdir -p /usr/local/myntcd/data
+ mkdir -p /usr/local/myntcd/rrd
+ mkdir -p /usr/local/etc/myntcd
+  
+ cd ..
+ cp bin/* /usr/local/myntcd/bin/
+ cp daemon/src/myntcd /usr/local/myntcd/bin/
+ cp docs /usr/local/myntcd/
+ cp etc/myntcd/* /usr/local/etc/myntcd/
+ cp etc/init.d/myntcd /etc/init.d/
+
+ cd /etc/init.d/
+ update-rc.d myntcd defaults
+ cd -
+ #END FILE
+ 
+ Drupal modul telepitese:
+ 
+ cp web /var/www/drupal/modules/myntcd
+
+4. Utolso simitasok:
+
 Cron beallitasa.
-	Daemon kimenetenek feldolgozasa:
-	0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntc/bin/myntc.php
-	Szurolistak aktivalasa:
-	0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntc/bin/ablacklist.php
+ Daemon kimenetenek feldolgozasa:
+ 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntc/bin/myntc.php
+ Szurolistak aktivalasa:
+ 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntc/bin/blacklist.php
 
-3. Webes megjelenites:
-Szukseges programok: webszerver php, php-mysql tamogatassal.
-	A scriptek elhelyezese tetszoleges...
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Drupal modul beallitasa.
+ Link: http://localhost/drupal/?q=admin/settings/myntcd
