@@ -1,0 +1,141 @@
+body {
+	background-color: #F3F3F3;
+	font-family: serif;
+	font-size: 12px;
+}
+
+select , select.year , select.ip {
+	width: 45px;
+}
+
+select.year {
+	width: 60px;
+}
+
+select.ip {
+	width: auto;
+}
+
+div.nowrap { white-space:nowrap; }
+
+div.clear { clear: both;}
+
+div.block {
+	width: 1070px;
+	height: auto;
+	margin: 0 auto;
+	white-space:nowrap;
+	border: 1px solid transparent;
+}
+
+div.name {
+	font-size: 18px;
+	font-weight: bold;
+	margin-top: 15px;
+	text-align: center;
+}
+
+div.src {
+	font-size: 14px;
+	font-weight: bold;
+	margin-top: 15px;
+	text-align: center;
+}
+
+div.date {
+	font-size: 14px;
+	font-weight: bold;
+	margin-top: 15px;
+	text-align: center;
+}
+
+a {
+	text-decoration: none;
+	color: blue;
+}
+
+a:visited {
+	color: blue;
+}
+a:hover { 
+	text-decoration: underline;
+}
+
+
+table, table.left, table.right {
+	color: #e4e4e4;
+	width: auto;
+	margin: 0 auto;
+	margin-top: 5px;
+}
+
+table.left {
+	float: left;
+	margin: 0;
+}
+
+table.right {
+	margin: 0;
+	margin-left: 20px;
+}
+
+th {
+	color: black;
+	background-color: #e4e4e4;
+	font-size: 20px;
+	text-align: center;
+	font-weight: bold;
+}
+
+/*
+tr {
+	background-color: #e4e4e4;
+	font-size: 14px;
+	text-align: left;
+}
+*/
+
+td , td.ip, td.ip2, td.data, td.percent, td.d-ok , td.d-warn, td.d-bad {
+	font-size: 14px;
+	color: black;
+	background-color: #e4e4e4;
+	text-align: center;
+	font-weight: bold;
+	width: auto;
+}
+
+td.ip {
+	font-size: 14px;
+	text-align: left;
+	font-weight: normal;
+}
+
+td.ip2 {
+	width: 130px;
+}
+
+td.data {
+	width: 100px;
+}
+
+td.percent {
+	width: 60px;
+}
+
+td.d-ok , td.d-warn, td.d-bad {
+	font-size: 14px;
+	text-align: right;
+	font-weight: normal;
+	width: 60px;
+}
+
+td.d-warn {
+	background-color: yellow;
+}
+
+td.d-bad {
+	background-color: #FF6666;
+}
+
+
+

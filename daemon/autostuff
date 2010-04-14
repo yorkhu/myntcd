@@ -1,0 +1,9 @@
+#! /bin/sh
+
+IFS=';'
+batch='aclocal;autoheader;automake -a;autoconf;touch stamp-h.in;'
+
+for running in $batch
+do
+  echo "---> $running"; eval $running;
+done

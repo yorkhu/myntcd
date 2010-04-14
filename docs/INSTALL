@@ -1,0 +1,54 @@
+Telepitesi utmutato.
+
+A program 3 fo reszbol all:
+ 1. Myntcd daemon, forgalom szamlalo.
+ 2. A daemon kimenetet feldolgozo scriptek.
+ 3. Webes megjelenites.
+
+1. Myntcd daemon telepitese.
+Szukseges programok: libpcap0.7-dev vagy libpcap0.8-dev
+	# cd myntcd/
+	# ./configure
+	# make
+	# make install                                (/usr/local/sbin/myntcd)
+init.d telepitese.
+	# cd ../etc/
+	# cp myntcd /etc/init.d/
+	# cd /etc/init.d
+	# update-rc.d myntcd defaults
+A konfig file pedig keruljon a /usr/local/etc konyvtarba.
+
+2. Kimenetet feldolgozo scriptek telepitese.
+Szukseges programok: mysql-server, php4-cli, php4-mysql, rrdtools, netcat.
+	# cd tools
+	# mysql -u root -p < ../docs/mysql.sql
+Mysql felhasznalo(k) letrehozasa.
+
+	# cp * /usr/local/sbin/
+Cron beallitasa.
+	Daemon kimenetenek feldolgozasa:
+	0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntc/bin/myntc.php
+	Szurolistak aktivalasa:
+	0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntc/bin/ablacklist.php
+
+3. Webes megjelenites:
+Szukseges programok: webszerver php, php-mysql tamogatassal.
+	A scriptek elhelyezese tetszoleges...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
