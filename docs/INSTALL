@@ -1,6 +1,6 @@
-Myntcd v. 0.7.0 telepitesi utmutato.
+Myntcd telepitesi utmutato.
 
-Ez az utmutato GNU Debian linux operaciosrendszer es mysql adatbazis
+Ez az utmutato GNU Debian linux operaciosrendszer es MySQL adatbazis
 szerverhez keszult.
 A telepites barmely mas linux/unix szeru operacios rendszeren elvegezheto.
 A myntcd tamogat minden olyan sql szervert, melyet pear-db es drupalon
@@ -10,22 +10,28 @@ keresztul el lehet erni.
   GNU GPL v2.0
 
 1. A program hasznalatahoz es telepiteshez szukseges csomagok:
-- libpcap0.7-dev vagy libpcap0.8-dev
-- automake
+- libpcap0.8 es libpcap0.8-dev
+- gcc, make, automake
 - rrdtool
-- php
+- php (php5-cli, php5-mysql)
 - webszerver
 - drupal 6.x
 - Csak MySQL szerver tamogatott sajnos
 
 2. Kicsomagolas, elokeszuletek:
- $ tar -xvvzf myntcd-0.9.0.tar.gz
+ $ tar -xvvzf myntcd-1.0.0.tar.gz
  MySql adatbazis letrehozasa.
- $ cd myntcd-0.9.0/docs
- $ mysql -u root -p < mysql.sql
+ $ cd myntcd-1.0.0/docs
+ $ mysql -u root -p < traffic.sql
  Mysql felhasznalo letrehozasa:
  - myntcd felhasznalo tudja irni/olvasni a traffic adatbazist
    GRANT ALL PRIVILEGES ON `traffic` . * TO 'myntcd'@'localhost' IDENTIFIED BY 'myntcd_pass'
+
+2.1 Ha mar hasznaltunk egy korabbi verziot:
+ Futtassuk updatesql.php
+
+ cd /usr/local/myntcd/bin
+ ./updatesql.php
 
 3. Telepites:
 3.1. Daemon telepitese:
@@ -37,21 +43,24 @@ keresztul el lehet erni.
 
  cd daemon/
  ./autostuff
- ./configure
+ ./configure --sysconfdir=/usr/local/etc/myntcd
  make
 
  mkdir -p /usr/local/myntcd/bin
  mkdir -p /usr/local/myntcd/data
+ mkdir -p /usr/local/myntcd/data.backup
  mkdir -p /usr/local/myntcd/rrd
  mkdir -p /usr/local/etc/myntcd
 
  cd ..
  cp bin/* /usr/local/myntcd/bin/
  cp daemon/src/myntcd /usr/local/myntcd/bin/
- cp docs /usr/local/myntcd/
- ln -s /etc/myntcd /usr/local/etc/myntcd
+ cp -r docs /usr/local/myntcd/
+ cp etc/myntcd/* /usr/local/etc/myntcd/
+ ln -s /usr/local/etc/myntcd /etc/myntcd
 
  # innen debian specifikus
+ cp etc/cron.d/myntcd /etc/cron.d/
  cp etc/init.d/myntcd /etc/init.d/
  cd /etc/init.d/
  update-rc.d myntcd defaults
@@ -66,10 +75,11 @@ keresztul el lehet erni.
 4. Utolso simitasok:
 
 Cron beallitasa.
- Daemon kimenetenek feldolgozasa:
- 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntcd/bin/myntc.php
- Szuro aktivalasa:
- 0,5,10,15,20,25,30,35,40,45,50,55 * * * * /usr/local/myntcd/bin/blacklist.php
+(install script bemasolja a cron.d konyvtarba)
+ #Daemon kimenetenek feldolgozasa:
+ */5 * * * * root /usr/local/myntcd/bin/myntc.php
+ #Szuro aktivalasa:
+ */5 * * * * root /usr/local/myntcd/bin/blacklist.php
 
 Drupal modul beallitasa.
  Link: http://localhost/drupal/?q=admin/sysadmin/myntcd

@@ -3,7 +3,7 @@
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
-#  myntcd.old.php: n/a
+#  myntcd.admin.inc: n/a
 #  myntcd.module: n/a
 #  myntcd.info,v 0.1 2009/01/02 13:21:54 martoni
 #
@@ -11,7 +11,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2009-01-06 15:14+0100\n"
+"POT-Creation-Date: 2011-11-04 11:58+0100\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -20,368 +20,332 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: myntcd.old.php:31 myntcd.module:16
-msgid "My Network Traffic Counter Daemon"
-msgstr ""
-
-#: myntcd.old.php:54 myntcd.module:60
-msgid "My Traffic"
-msgstr ""
-
-#: myntcd.old.php:59;121;144;186;229 myntcd.module:1342;1350;75;158;213;265
-msgid "Daily"
-msgstr ""
-
-#: myntcd.old.php:65;125;150;190;233 myntcd.module:1343;1351;84;167;222;274
-msgid "Weekly"
-msgstr ""
-
-#: myntcd.old.php:71;129;156;194;237 myntcd.module:1344;1352;93;176;231;283
-msgid "Monthly"
-msgstr ""
-
-#: myntcd.old.php:77;133;162;198;241 myntcd.module:1345;1353;102;185;240;292
-msgid "Yearly"
-msgstr ""
-
-#: myntcd.old.php:85 myntcd.module:112
-msgid "MyImg"
-msgstr ""
-
-#: myntcd.old.php:93 myntcd.module:121
-msgid "Myntcd"
-msgstr ""
-
-#: myntcd.old.php:100 myntcd.module:130
-msgid "Img"
-msgstr ""
-
-#: myntcd.old.php:108 myntcd.module:195
-msgid "IP Ranges"
-msgstr ""
-
-#: myntcd.old.php:115 myntcd.module:1341
-msgid "All"
-msgstr ""
-
-#: myntcd.old.php:139 myntcd.module:250
-msgid "Top Lists"
-msgstr ""
-
-#: myntcd.old.php:170 myntcd.module:302
-msgid "Filter"
-msgstr ""
-
-#: myntcd.old.php:267
-msgid "Sql Server Settings"
-msgstr ""
-
-#: myntcd.old.php:277;943;1421 myntcd.module:442;1292;2625
-msgid "Type"
-msgstr ""
-
-#: myntcd.old.php:284 myntcd.module:447
-msgid "Host"
-msgstr ""
-
-#: myntcd.old.php:291 myntcd.module:456
-msgid "Port"
-msgstr ""
-
-#: myntcd.old.php:298 myntcd.module:465
-msgid "Database name"
-msgstr ""
-
-#: myntcd.old.php:305 myntcd.module:473
-msgid "Username"
-msgstr ""
-
-#: myntcd.old.php:312 myntcd.module:481
-msgid "Password"
-msgstr ""
-
-#: myntcd.old.php:320 myntcd.module:489
-msgid "RRD Tool settings"
-msgstr ""
-
-#: myntcd.old.php:327 myntcd.module:496
-msgid "RRD command"
-msgstr ""
-
-#: myntcd.old.php:334 myntcd.module:505
-msgid "RRD file dir"
-msgstr ""
-
-#: myntcd.old.php:374 myntcd.module:2759
-msgid "Other"
-msgstr ""
-
-#: myntcd.old.php:378 myntcd.module:2763
-msgid "ICMP"
-msgstr ""
-
-#: myntcd.old.php:382 myntcd.module:2767
-msgid "TCP"
-msgstr ""
-
-#: myntcd.old.php:386 myntcd.module:2771
-msgid "UDP"
-msgstr ""
-
-#: myntcd.old.php:414 myntcd.module:2696
-msgid "In"
-msgstr ""
-
-#: myntcd.old.php:417 myntcd.module:2699
-msgid "Out"
-msgstr ""
-
-#: myntcd.old.php:420 myntcd.module:2702
-msgid "Total"
-msgstr ""
-
-#: myntcd.old.php:497;624 myntcd.module:843;1926
-msgid "Total traffic:"
-msgstr ""
-
-#: myntcd.old.php:906;1374;1380;1397;1414 myntcd.module:953
-msgid "Ip address"
-msgstr ""
-
-#: myntcd.old.php:911
-msgid "Search"
-msgstr ""
-
-#: myntcd.old.php:937;1272;2153
-msgid "%title traffic"
-msgstr ""
-
-#: myntcd.old.php:939
-msgid "IP: %IP"
-msgstr ""
-
-#: myntcd.old.php:942;1277;1917;1973 myntcd.module:883;1291
-msgid "Time"
-msgstr ""
-
-#: myntcd.old.php:944 myntcd.module:1293
-msgid "In Packet"
-msgstr ""
-
-#: myntcd.old.php:945 myntcd.module:1294
-msgid "Out Packet"
-msgstr ""
-
-#: myntcd.old.php:946 myntcd.module:1295
-msgid "Total Packet"
-msgstr ""
-
-#: myntcd.old.php:947;1278;1918;1974;2156 myntcd.module:884;1296;1701;1786;2330
-msgid "In Byte"
-msgstr ""
-
-#: myntcd.old.php:948;1279;1919;1975;2157 myntcd.module:885;1297;1702;1787;2331
-msgid "Out Byte"
-msgstr ""
-
-#: myntcd.old.php:949;1280;1920;1976;2158 myntcd.module:886;1298;1703;1788;2332
-msgid "Total Byte"
-msgstr ""
-
-#: myntcd.old.php:950;1281;1921;1977;2159 myntcd.module:887;1299;1704;1789;2333
-msgid "Out%"
-msgstr ""
-
-#: myntcd.old.php:1274 myntcd.module:880
-msgid "My ip: %IP"
-msgstr ""
-
-#: myntcd.old.php:1349
-msgid "never"
-msgstr ""
-
-#: myntcd.old.php:1352;1354
-msgid "Remove day:"
-msgstr ""
-
-#: myntcd.old.php:1359;1362
-msgid "Empty"
-msgstr ""
-
-#: myntcd.old.php:1368;1422 myntcd.module:2626;310
-msgid "Blacklist"
-msgstr ""
-
-#: myntcd.old.php:1384
-msgid "Add whitelist"
-msgstr ""
-
-#: myntcd.old.php:1391;1422 myntcd.module:2626;319
-msgid "Whitelist"
-msgstr ""
-
-#: myntcd.old.php:1401
-msgid "Remove whitelist"
-msgstr ""
-
-#: myntcd.old.php:1408 myntcd.module:328
-msgid "Add filter"
-msgstr ""
-
-#: myntcd.old.php:1427
-msgid "time interval"
-msgstr ""
-
-#: myntcd.old.php:1428;1428;1428 myntcd.module:2633;2633;2633
-msgid "day"
-msgstr ""
-
-#: myntcd.old.php:1428;1428 myntcd.module:2633;2633
-msgid "week"
-msgstr ""
-
-#: myntcd.old.php:1428 myntcd.module:2633
-msgid "month"
-msgstr ""
-
-#: myntcd.old.php:1428 myntcd.module:2383;2521;2633
-msgid "for ever"
-msgstr ""
-
-#: myntcd.old.php:1432 myntcd.module:514;2406;2451;2539;2583;2645
-msgid "Save"
-msgstr ""
-
-#: myntcd.old.php:1979
-msgid "Daily Top %num total byte"
-msgstr ""
-
-#: myntcd.old.php:1983
-msgid "Monthly Top %num total byte"
-msgstr ""
-
-#: myntcd.old.php:1987
-msgid "Yearly Top %num total byte"
-msgstr ""
-
-#: myntcd.old.php:2155
-msgid "IP"
-msgstr ""
-
-#: myntcd.module:434
+#: myntcd.admin.inc:22
 msgid "Mysql Server Settings"
 msgstr ""
 
-#: myntcd.module:571
-msgid "Az IP cím forgalma blokkolva: !date"
+#: myntcd.admin.inc:30 myntcd.module:1152;2565
+msgid "Type"
 msgstr ""
 
-#: myntcd.module:878;1285
+#: myntcd.admin.inc:35
+msgid "Host"
+msgstr ""
+
+#: myntcd.admin.inc:44
+msgid "Port"
+msgstr ""
+
+#: myntcd.admin.inc:53
+msgid "Database name"
+msgstr ""
+
+#: myntcd.admin.inc:61
+msgid "Username"
+msgstr ""
+
+#: myntcd.admin.inc:69
+msgid "Password"
+msgstr ""
+
+#: myntcd.admin.inc:77
+msgid "RRD Tool settings"
+msgstr ""
+
+#: myntcd.admin.inc:84
+msgid "RRD command"
+msgstr ""
+
+#: myntcd.admin.inc:93
+msgid "RRD file dir"
+msgstr ""
+
+#: myntcd.admin.inc:102 myntcd.module:2344;2389;2479;2523;2598
+msgid "Save"
+msgstr ""
+
+#: myntcd.module:16
+msgid "My Network Traffic Counter Daemon"
+msgstr ""
+
+#: myntcd.module:458
+msgid "The IP address transfer blocking: !date"
+msgstr ""
+
+#: myntcd.module:698;1847
+msgid "Total traffic:"
+msgstr ""
+
+#: myntcd.module:733;1145
 msgid "!title (!date)"
 msgstr ""
 
-#: myntcd.module:958
+#: myntcd.module:735
+msgid "My ip: %IP"
+msgstr ""
+
+#: myntcd.module:738;1151
+msgid "Time"
+msgstr ""
+
+#: myntcd.module:739;1156;1578;1699;2266
+msgid "In Byte"
+msgstr ""
+
+#: myntcd.module:740;1157;1579;1700;2267
+msgid "Out Byte"
+msgstr ""
+
+#: myntcd.module:741;1158;1580;1701;2268
+msgid "Total Byte"
+msgstr ""
+
+#: myntcd.module:742;1159;1581;1702;2269
+msgid "Out%"
+msgstr ""
+
+#: myntcd.module:806
+msgid "Ip address"
+msgstr ""
+
+#: myntcd.module:811
 msgid "Jump"
 msgstr ""
 
-#: myntcd.module:965;2653
+#: myntcd.module:818;2606
 msgid "Is not IP address."
 msgstr ""
 
-#: myntcd.module:1195;1216;1237;1258;1600;1622;1644;1666;2241;2261;2281;2301
+#: myntcd.module:1055;1076;1097;1118;1477;1499;1521;1543;2177;2197;2217;2237
 msgid "previous"
 msgstr ""
 
-#: myntcd.module:1201;1222;1243;1264;1606;1628;1650;1672;2247;2267;2287;2307
+#: myntcd.module:1061;1082;1103;1124;1483;1505;1527;1549;2183;2203;2223;2243
 msgid "next"
 msgstr ""
 
-#: myntcd.module:1287
+#: myntcd.module:1147
 msgid "IP Address: !IP"
 msgstr ""
 
-#: myntcd.module:1335;1700;1785;2329;2425;2558;2617
+#: myntcd.module:1153
+msgid "In Packet"
+msgstr ""
+
+#: myntcd.module:1154
+msgid "Out Packet"
+msgstr ""
+
+#: myntcd.module:1155
+msgid "Total Packet"
+msgstr ""
+
+#: myntcd.module:1194;1577;1698;2265;2363;2498;2557
 msgid "IP Address"
 msgstr ""
 
-#: myntcd.module:1336
+#: myntcd.module:1195
 msgid "Operations"
 msgstr ""
 
-#: myntcd.module:1694
+#: myntcd.module:1200
+msgid "All"
+msgstr ""
+
+#: myntcd.module:1201;1209;2186;84;167;222;274
+msgid "Daily"
+msgstr ""
+
+#: myntcd.module:1202;1210;2206;93;176;231;283
+msgid "Weekly"
+msgstr ""
+
+#: myntcd.module:1203;1211;2226;102;185;240;292
+msgid "Monthly"
+msgstr ""
+
+#: myntcd.module:1204;1212;2246;111;194;249;301
+msgid "Yearly"
+msgstr ""
+
+#: myntcd.module:1571
 msgid "all"
 msgstr ""
 
-#: myntcd.module:1697
+#: myntcd.module:1574
 msgid "IP Range traffic: !iprange (!date)"
 msgstr ""
 
-#: myntcd.module:1791
+#: myntcd.module:1704
 msgid "Daily Top !num total byte"
 msgstr ""
 
-#: myntcd.module:1795
+#: myntcd.module:1708
+msgid "Weekly Top !num total byte"
+msgstr ""
+
+#: myntcd.module:1712
 msgid "Monthly Top !num total byte"
 msgstr ""
 
-#: myntcd.module:1799
+#: myntcd.module:1716
 msgid "Yearly Top !num total byte"
 msgstr ""
 
-#: myntcd.module:2401;2477
+#: myntcd.module:2263
+msgid " Top !num (!date)"
+msgstr ""
+
+#: myntcd.module:2271
+msgid " Top !num in byte"
+msgstr ""
+
+#: myntcd.module:2275
+msgid " Top !num out byte"
+msgstr ""
+
+#: myntcd.module:2279
+msgid " Top !num total byte"
+msgstr ""
+
+#: myntcd.module:2321;2461;2578
+msgid "for ever"
+msgstr ""
+
+#: myntcd.module:2339;2415
 msgid "Add Whitelist"
 msgstr ""
 
-#: myntcd.module:2411;2465;2544;2597
+#: myntcd.module:2349;2403;2484;2537
 msgid "Delete"
 msgstr ""
 
-#: myntcd.module:2426;2559
+#: myntcd.module:2364;2499
 msgid "End date"
 msgstr ""
 
-#: myntcd.module:2427;2560;2639
+#: myntcd.module:2365;2500;2592
 msgid "Comment"
 msgstr ""
 
-#: myntcd.module:2632
+#: myntcd.module:2566;319
+msgid "Blacklist"
+msgstr ""
+
+#: myntcd.module:2566;328
+msgid "Whitelist"
+msgstr ""
+
+#: myntcd.module:2572
 msgid "Time interval"
 msgstr ""
 
-#: myntcd.module:41
+#: myntcd.module:2575
+msgid "day"
+msgstr ""
+
+#: myntcd.module:2576
+msgid "week"
+msgstr ""
+
+#: myntcd.module:2577
+msgid "month"
+msgstr ""
+
+#: myntcd.module:2609
+msgid "Time interval is not numeric."
+msgstr ""
+
+#: myntcd.module:2653
+msgid "In"
+msgstr ""
+
+#: myntcd.module:2656
+msgid "Out"
+msgstr ""
+
+#: myntcd.module:2659
+msgid "Total"
+msgstr ""
+
+#: myntcd.module:2716
+msgid "Other"
+msgstr ""
+
+#: myntcd.module:2720
+msgid "ICMP"
+msgstr ""
+
+#: myntcd.module:2724
+msgid "TCP"
+msgstr ""
+
+#: myntcd.module:2728
+msgid "UDP"
+msgstr ""
+
+#: myntcd.module:49
 msgid "my traffic"
 msgstr ""
 
-#: myntcd.module:41
+#: myntcd.module:49
 msgid "traffic manager"
 msgstr ""
 
-#: myntcd.module:41
+#: myntcd.module:49
 msgid "traffic administer"
 msgstr ""
 
-#: myntcd.module:41
+#: myntcd.module:49
 msgid "myntcd administer"
 msgstr ""
 
-#: myntcd.module:52
+#: myntcd.module:60
 msgid "Myntcd settings"
 msgstr ""
 
-#: myntcd.module:67;149;257
+#: myntcd.module:69
+msgid "My Traffic"
+msgstr ""
+
+#: myntcd.module:76;158;266
 msgid "Summary"
 msgstr ""
 
-#: myntcd.module:140
+#: myntcd.module:121
+msgid "MyImg"
+msgstr ""
+
+#: myntcd.module:130
+msgid "Myntcd"
+msgstr ""
+
+#: myntcd.module:139
+msgid "Img"
+msgstr ""
+
+#: myntcd.module:149
 msgid "!ip"
 msgstr ""
 
 #: myntcd.module:204
+msgid "IP Ranges"
+msgstr ""
+
+#: myntcd.module:213
 msgid "!iprange"
 msgstr ""
 
-#: myntcd.module:0
-msgid "myntcd"
+#: myntcd.module:259
+msgid "Top Lists"
+msgstr ""
+
+#: myntcd.module:311
+msgid "Filter"
+msgstr ""
+
+#: myntcd.module:337
+msgid "Add filter"
 msgstr ""
 
 #: myntcd.info:0

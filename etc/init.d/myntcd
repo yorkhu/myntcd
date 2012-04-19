@@ -1,4 +1,14 @@
 #!/bin/sh
+
+### BEGIN INIT INFO                                                                                                               
+# Provides:             myntcd                                                                                                    
+# Required-Start:       $local_fs $remote_fs $network $syslog                                                                     
+# Required-Stop:        $local_fs $remote_fs $network $syslog                                                                     
+# Default-Start:        2 3 4 5                                                                                                   
+# Default-Stop:         0 1 6                                                                                                     
+# Short-Description:    start/stop myntcd                                                                                         
+### END INIT INFO
+
 #
 # /etc/init.d/myntcd start/stop/restart
 #
@@ -17,27 +27,27 @@ test -r $CONFIG || exit 0
 
 case "$1" in
   start)
-    echo -n "Starting $DESC: $NAME"
+    echo -n "$DESC: $NAME Starting..."
     start-stop-daemon --start --quiet --exec $DAEMON
-    echo "."
+    echo "\t[OK]"
     ;;
   stop)
-    echo -n "Stopping $DESC: $NAME"
+    echo -n "$DESC: $NAME Stopping..."
     start-stop-daemon --stop --quiet  --pidfile $PIDFILE
-    echo "."
+    echo "\t[OK]"
     ;;
   force-reload|reload)
-    echo -n "Restarting $DESC: $NAME reload"
+    echo -n "$DESC: $NAME Reloading..."
     start-stop-daemon --stop --pidfile $PIDFILE --signal USR1
-    echo "."
+    echo "\t[OK]"
     ;;
   restart)
-    echo -n "Reloading $DESC: $NAME stop"
+    echo "$DESC: $NAME Restarting..."
     start-stop-daemon --stop --quiet  --pidfile $PIDFILE
-    echo -n ". start"
+    echo "Stop\t[OK]"
     sleep 3
     start-stop-daemon --start --quiet  --exec $DAEMON
-    echo "."
+    echo "Start\t[OK]"
     ;;
   *)
     echo "Usage: /etc/init.d/$NAME {start | stop | restart | force-reload | reload}"

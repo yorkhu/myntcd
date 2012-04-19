@@ -1,0 +1,4 @@
+#Daemon kimenetenek feldolgozasa:
+*/5 * * * * root /usr/local/myntcd/bin/myntc.php
+#Szuro aktivalasa:
+*/5 * * * * root /usr/local/myntcd/bin/blacklist.php
