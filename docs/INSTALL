@@ -13,7 +13,7 @@ keresztul el lehet erni.
 - libpcap0.8 es libpcap0.8-dev
 - gcc, make, automake
 - rrdtool
-- php (php5-cli, php5-mysql)
+- php (php5-cli, php5-mysql, php-db)
 - webszerver
 - drupal 6.x
 - Csak MySQL szerver tamogatott sajnos
@@ -71,6 +71,13 @@ keresztul el lehet erni.
  
 # cp -r myntcd /var/www/drupal/sites/all/modules/myntcd
 # cp -r sysadminmenu /var/www/drupal/sites/all/modules/sysadminmenu
+#
+# /var/www/drupal/sites/all/default/settings.php
+# ki kell csererni a
+# $db_url = 'mysqli://username:password@localhost/databasename';
+# erre
+# $db_url['default'] = 'mysqli://username:password@localhost/databasename';
+# a tobb adatbazis miatt
 
 4. Utolso simitasok:
 

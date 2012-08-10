@@ -119,8 +119,7 @@ if ( $config ) {
 			return false;
 		}
 		// Ez csak akkor kell ha cisco csinalja az ipcimek tiltasat
-		/*$SQL = "SELECT ip FROM filter WHERE blacklist = '1'";
-		$SQL .= " WHERE whitelist.ip is null GROUP BY ip";
+		/*$SQL = "SELECT ip FROM filter WHERE blacklist = '1' GROUP BY ip";
 		$result =& $db->query($SQL);
 		if (DB::isError($result)) {
 			openlog("blacklist.php", LOG_PID, LOG_LOCAL0);

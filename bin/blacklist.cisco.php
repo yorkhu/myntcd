@@ -7,7 +7,7 @@ $cmd .= "no ip access-list extended blacklist\n";
 $cmd .= "ip access-list extended blacklist\n";
 if ($result->numRows() > 0) {
 	while ($r =& $result->fetchRow()) {
-		$cmd .= 'deny ip host '.$r["ips"]." any\n";
+		$cmd .= 'deny ip host '.$r["ip"]." any\n";
 	}
 }
 
