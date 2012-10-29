@@ -90,3 +90,103 @@ Cron beallitasa.
 
 Drupal modul beallitasa.
  Link: http://localhost/drupal/?q=admin/sysadmin/myntcd
+
+5. Forgalom szabalyzas Shorewall program segitsegevel
+
+Aki nem tud/akar cisco-val forgalmat szabalyozni, ami teljes tiltast eredmenyez annak egy masik alternativaken ez is hasznalhato.
+A leiras nem tartalmazza a tuzfal beallitasokat, csak a forgalom szabalyzashoz szukseges reszeket!
+Ez az megoldas Shorewall 4.4.17-ig mukodokepes.
+- Telepitsunk egy gepre Shorewall es Shorewall6 tuzfal programot es allitsunk be rajta mindent, amit kell, majd helyezzuk el a halozat megfelelo pontjara.
+- Masoljuk a fajlokat a megfelelo helyre, ahogy a tcws konyvtarban talalhatok
+- Ellenoruzuk a kovetkezoket a shorewall.conf es a shorewall6.conf fajlba, hogy igy vannak e beallitva.
+    TC_ENABLED=Internal
+    CLEAR_TC=Yes
+    MARK_IN_FORWARD_CHAIN=Yes
+    DISABLE_IPV6=No #Ha hasznalunk IPv6-ot, ez csak a shorewall.conf-ban szerepel
+    WIDE_TC_MARKS=Yes
+- Modositsuk a tcdevices, tcclasses, tcrules.def fajlokon a beallitasokank megfeleloen.
+    tcdevices: (ugyan az a fajl a shorewall es shorewall6 eseten is)
+	###############################################################################
+	#NUMBER:        IN-BANDWITH     OUT-BANDWIDTH   OPTIONS         REDIRECTED
+	#INTERFACE                                                      INTERFACES
+	1:eth0          100mbit        100mbit        classify
+	2:eth1          100mbit        100mbit        classify
+	#LAST LINE -- ADD YOUR ENTRIES BEFORE THIS ONE -- DO NOT REMOVE
+
+	Az elso oszlopban a szam, amivel hivatkozni fogunk az interfeszre.
+	A masodik oszlop a bejovo a harmadikban a kimeno savszelessegunk talalhato.
+	A negyedik oszlopban a TC mukodeset hatarozzuk meg.
+
+    tcclasses: (ugyan az a fajl a shorewall es shorewall6 eseten is)
+	Ebben a fajlban osztalyokat lehet letrehozni, melyeknel kulonbozo savszelesseget tudunk megadni.
+
+	###############################################################################
+	#INTERFACE:CLASS        MARK    RATE    CEIL    PRIORITY        OPTIONS
+	2:6021                  -       10mbit  10mbit  1
+	1:6021                  -       2mbit   2mbit   1
+	2:6022                  -       10mbit  10mbit  1
+	1:6022                  -       2mbit   2mbit   1
+	2:3101                  -       512kbit 512kbit 2
+	1:3101                  -       128kbit 128kbit 2
+	2:3102                  -       512kbit 512kbit 2
+	1:3102                  -       128kbit 128kbit 2
+	2:3103                  -       512kbit 512kbit 2
+	1:3103                  -       128kbit 128kbit 2
+	2:4101                  -       512kbit 512kbit 2
+	1:4101                  -       128kbit 128kbit 2
+	2:4102                  -       512kbit 512kbit 2
+	1:4102                  -       128kbit 128kbit 2
+	2:4103                  -       512kbit 512kbit 2
+	1:4103                  -       128kbit 128kbit 2
+	#LAST LINE -- ADD YOUR ENTRIES BEFORE THIS ONE -- DO NOT REMOVE
+
+	Az elso oszlopban az elso szam a tcdevices fajlban beallitott azonosito, a kettospont utani pedig az osztaly azonositoja.
+	Minden osztalyazonosito egy ipcimet tartalmaz, ha tobbre lenne beallitva, akkor azok az ipcimek a megadott savszelessegen osztoznanak.
+	A masdik oszlopra most nincs szukseg, nem jeloljuk meg a csomagokat.
+	A harmadik oszlopban a savszelessegkorlat erteke talalhato.
+
+    tcrules.def: (kulonbozik a shorewall es shorewall6 programoknal)
+	Ide kerulnek azok az ipcimek, melyek allando forgalomkorlatozas alatt vannak.
+	Ezt a fajlt fogja a tcrules.py script alapkent hasznalni.
+	A #BLACKLIST ala ne irjunk semmit!
+
+	shorewall
+	######################################################################################################################
+	#MARK   SOURCE          DEST            PROTO   DEST    SOURCE  USER    TEST    LENGTH  TOS   CONNBYTES         HELPER
+	#                                               PORT(S) PORT(S)
+	2:6021  0.0.0.0/0       10.13.6.21      all
+	1:6021  10.13.6.21      0.0.0.0/0       all
+	# BLACKLIST
+	#LAST LINE -- ADD YOUR ENTRIES BEFORE THIS ONE -- DO NOT REMOVE
+
+	shorewall6
+	######################################################################################################################
+	#MARK   SOURCE          DEST            PROTO   DEST    SOURCE  USER    TEST    LENGTH  TOS   CONNBYTES         HELPER
+	#                                               PORT(S) PORT(S)
+	2:6022  ::/0            2001:f739:4901:d999::7726        all
+	1:6022  2001:f739:4901:d999::7726        ::/0    all
+	# BLACKLIST
+	#LAST LINE -- ADD YOUR ENTRIES BEFORE THIS ONE -- DO NOT REMOVE
+
+    tcrules:
+	Ezt a fajlt mindig felulirja a tcrules.py script a tcrules.def es a MySQL adatbazis alapjan.
+
+- Modositsuk a tcrules.py fajl fejlecet.
+    Adjuk meg traffic adatbazis elerhetosegeit.
+    Adjuk meg a TC specifikus beallitasokat.
+	download_class_prefix: A tcdevices fajlban a befele jovo forgalom halokartyaja ele irt szam kettosponttal egyutt.
+	    download_class_prefix = "2:"
+	upload_class_prefix: A tcdevices fajlban a kifele meno forgalom halokartyaja ele irt szam kettosponttal egyutt.
+	    upload_class_prefix = "1:"
+	blackliststart: A fekete lista osztalyinak kezdoerteke shorewall eseten.
+	    blackliststart = 3001
+	blacklistmaxnum: Hany ilyen osztaly van.
+	    blacklistmaxnum = 3
+	blackliststart_6: A fekete lista osztalyinak kezdoerteke shorewall6 eseten.
+	    blackliststart_6 = 4001
+	blacklistmaxnum_6: Hany ilyen osztaly van.
+	    blacklistmaxnum_6 = 3
+
+- Inditsuk ujra a shorewall es shorewall6 programokat.
+
+Tovabbi segitseget a http://www.shorewall.net/ oldalon lehet talalni.
