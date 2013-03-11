@@ -1,5 +1,8 @@
-; $Id: myntcd.info,v 0.1 2009/01/02 13:21:54 martoni Exp $
 name = MyNTCD
 description = My Network Traffic Counter Daemon web base frontend.
-core = 6.x
+core = 7.x
+package = System Administration
+configure = admin/config/sysadmin/myntcd
 dependencies[] = sysadminmenu
+
+stylesheets[all][] = css/myntcd.css
