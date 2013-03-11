@@ -1,11 +1,11 @@
 <?php
-// $Id$
+
 /**
 * @file
 * Administration page callbacks for the myntcd module.
 */
 /**
-* Form builder. Configure kira.
+* Form builder. Configure myntcd.
 *
 * @ingroup forms
 * @see system_settings_form().
@@ -16,24 +16,28 @@
  * @return form contents for this module
  */
 function myntcd_settings() {
-	/* Myntcd SQL szerver bealitasa */
+	// Myntcd SQL szerver bealitasa
 	$form['myntcd_sql_server'] = array(
 		'#type' => 'fieldset',
 		'#title' => t('Mysql Server Settings'),
 		'#collapsible' => TRUE,
-		'#collapsed' => false,
+		'#collapsed' => FALSE,
 	);
-
-	$form['myntcd_sql_server']['myntcd_server_type'] = array(
-		'#type' => 'item',
-		'#value' => 'MySql',
-		'#title' => t('Type'),
-	);
+	$sql_server_type['mysql'] = 'MySQL';
+  $sql_server_type['pgsql'] = 'PostgreSQL';
+  // $sql_server_type['sqlite'] = 'SQLite';
+  $form['myntcd_sql_server']['myntcd_server_type'] = array(
+    '#type' => 'radios',
+    '#title' => t('Type'),
+    '#default_value' => variable_get('myntcd_server_type', 'mysql'),
+    '#options' => $sql_server_type,
+    '#description' => '',
+  );
 
 	$form['myntcd_sql_server']['myntcd_server'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Host'),
-		'#default_value' => variable_get('myntcd_server', localhost),
+		'#default_value' => variable_get('myntcd_server', 'localhost'),
 		'#description' => '',
 		'#maxlength' => '200',
 		'#size' => '30',
@@ -42,7 +46,7 @@ function myntcd_settings() {
 	$form['myntcd_sql_server']['myntcd_port'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Port'),
-		'#default_value' => variable_get('myntcd_port', 3306),
+		'#default_value' => variable_get('myntcd_port', '3306'),
 		'#description' => '',
 		'#maxlength' => '5',
 		'#size' => '5',
@@ -51,7 +55,7 @@ function myntcd_settings() {
 	$form['myntcd_sql_server']['myntcd_db'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Database name'),
-		'#default_value' => variable_get('myntcd_db', traffic),
+		'#default_value' => variable_get('myntcd_db', 'traffic'),
 		'#description' => '',
 		'#size' => '10',
 	);
@@ -59,7 +63,7 @@ function myntcd_settings() {
 	$form['myntcd_sql_server']['myntcd_user'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Username'),
-		'#default_value' => variable_get('myntcd_user', user),
+		'#default_value' => variable_get('myntcd_user', 'user'),
 		'#description' => '',
 		'#size' => '10',
 	);
@@ -71,12 +75,12 @@ function myntcd_settings() {
 		'#size' => '10',
 	);
 
-	/* RRD adatbazis hasznalatahoz szukseges beallitasok */
+	// RRD adatbazis hasznalatahoz szukseges beallitasok
 	$form['myntcd_rrd'] = array(
 		'#type' => 'fieldset',
 		'#title' => t('RRD Tool settings'),
 		'#collapsible' => TRUE,
-		'#collapsed' => false,
+		'#collapsed' => FALSE,
 	);
 
 	$form['myntcd_rrd']['myntcd_rrd_cmd'] = array(
@@ -97,11 +101,5 @@ function myntcd_settings() {
 		'#size' => '30',
 	);
 
-	$form["submit"] = array(
-		"#type" => "submit",
-		"#value" => t('Save'),
-	);
-
-	//return $form;
 	return system_settings_form($form);
 } // function myntcd_settins()
