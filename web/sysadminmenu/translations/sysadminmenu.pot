@@ -4,13 +4,13 @@
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
 #  sysadminmenu.module: n/a
-#  myntcd.info,v 0.1 2009/01/02 13:21:54 martoni
+#  sysadminmenu.info: n/a
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2009-01-06 15:15+0100\n"
+"POT-Creation-Date: 2013-02-15 10:14+0100\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -19,20 +19,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: sysadminmenu.module:11
-msgid "system administration"
-msgstr ""
-
-#: sysadminmenu.module:21
+#: sysadminmenu.module:18;28 sysadminmenu.info:0
 msgid "System Administration"
 msgstr ""
 
-#: sysadminmenu.module:22
+#: sysadminmenu.module:29
 msgid "System Administration."
-msgstr ""
-
-#: sysadminmenu.module:0
-msgid "sysadminmenu"
 msgstr ""
 
 #: sysadminmenu.info:0

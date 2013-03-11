@@ -4,36 +4,28 @@
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
 #  sysadminmenu.module: n/a
-#  myntcd.info,v 0.1 2009/01/02 13:21:54 martoni
+#  sysadminmenu.info: n/a
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2009-01-06 15:15+0100\n"
-"PO-Revision-Date: 2009-01-06 15:15+0100\n"
+"POT-Creation-Date: 2013-02-15 10:11+0100\n"
+"PO-Revision-Date: 2013-02-15 10:11+0100\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Hungarian <EMAIL@ADDRESS>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=0; plural=;\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
-#: sysadminmenu.module:11
-msgid "system administration"
-msgstr "rendszer adminisztráció"
-
-#: sysadminmenu.module:21
+#: sysadminmenu.module:18;28 sysadminmenu.info:0
 msgid "System Administration"
 msgstr "Rendszer adminisztráció"
 
-#: sysadminmenu.module:22
+#: sysadminmenu.module:29
 msgid "System Administration."
 msgstr "Rendszer adminisztráció."
-
-#: sysadminmenu.module:0
-msgid "sysadminmenu"
-msgstr ""
 
 #: sysadminmenu.info:0
 msgid "SysAdminMenu"

@@ -1,23 +1,30 @@
 <?php
-/*
- * Created on 2009.01.02.
+/**
+ * @file
+ * Collect the SysAdmin modules
+ *
+ *
+ * System administration menu.
+ * Created on 2013.02.15.
  */
 
 /**
  * Valid permissions for this module
  * @return array An array of valid permissions for the myntcd module
  */
-function sysadminmenu_perm() {
-	return array('system administration');
+function sysadminmenu_permission() {
+	return array(
+		'system administration' => array(
+			'title' => t('System Administration')
+		),
+	);
 } // function sysadminmenu_perm()
 
 /**
  * sysadminmenu_menu: menus
  */
 function sysadminmenu_menu() {
-
-	/** Administrator menus, System admin*/
-	$items['admin/sysadmin'] = array(
+	$items['admin/config/sysadmin'] = array(
 		'title' => 'System Administration',
 		'description' => 'System Administration.',
 		'position' => 'right',
@@ -28,5 +35,3 @@ function sysadminmenu_menu() {
 	);
 	return $items;
 } // function sysadminmenu_menu()
-
-
