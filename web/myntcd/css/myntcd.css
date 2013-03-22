@@ -9,19 +9,8 @@ td.myntcd_in_byte, td.myntcd_out_byte, td.myntcd_total_byte, td.myntcd_rate {
 	text-align: right;
 }
 
-td.myntcd_in_packet_warrning, td.myntcd_out_packet_warrning, td.myntcd_total_packet_warrning,
-td.myntcd_in_byte_warrning, td.myntcd_out_byte_warrning, td.myntcd_total_byte_warrning, td.myntcd_rate_warrning {
-	text-align: right;
-	background-color: #f44;
-}
-
-td.myntcd_total_in_packet, td.myntcd_total_out_packet, td.myntcd_total_total_packet,
-td.myntcd_total_in_byte, td.myntcd_total_out_byte, td.myntcd_total_total_byte, td.myntcd_total_rate {
-	text-align: right;
-}
-
-td.myntcd_total_in_packet_warrning, td.myntcd_total_out_packet_warrning, td.myntcd_total_total_packet_warrning,
-td.myntcd_total_in_byte_warrning, td.myntcd_total_out_byte_warrning, td.myntcd_total_total_byte_warrning, td.myntcd_total_rate_warrning {
+td.myntcd_in_packet_warning, td.myntcd_out_packet_warning, td.myntcd_total_packet_warning,
+td.myntcd_in_byte_warning, td.myntcd_out_byte_warning, td.myntcd_total_byte_warning, td.myntcd_rate_warning {
 	text-align: right;
 	background-color: #f44;
 }
