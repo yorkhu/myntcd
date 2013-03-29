@@ -388,22 +388,20 @@ function myntcd_theme() {
  * @return build tomb, amiben a tablazatok megjelenitesehez vannak infok
  */
 function myntcd_my_traffic($when = '', $date = '') {
-	$output = '';
-
 	// Kliens gep IP cime
 	$my_ip = $_SERVER['REMOTE_ADDR'];
 
+	$dates = _myntcd_getback_dates($when, $date);
+
+	_myntcd_set_title('myip', $my_ip, $dates['start'], $dates['stop']);
+
 	switch ($when) {
 		case '':
-			$date = date('Y-m-d');
-
-			_myntcd_set_title('myip', $my_ip);
-
 			// Kapcsolodas az SQL szerverhez
 			db_set_active('myntcd');
 
 			$SQL = "SELECT * FROM filter WHERE ip = :ip AND date >= :date AND blacklist = 1";
-			$result = db_query($SQL, array(':ip' => $my_ip, ':date' => $date));
+			$result = db_query($SQL, array(':ip' => $my_ip, ':date' => $dates['date']));
 
 			// Vissza valtas az alapertelmezett SQL szerverhez
 			db_set_active();
@@ -418,60 +416,33 @@ function myntcd_my_traffic($when = '', $date = '') {
 				);
 			}
 
-			// Bekoszonto kepernyo
+			// Osszegzes kepernyo
 			$build['myntcd_my_traffic'] = array(
 			  '#theme' => 'myntcd_rrds',
 			  '#ip' => $my_ip,
 			  '#path' => 'my_traffic',
 			);
 			return $build;
+
 			break;
-		case 'daily':
-		// Napi forgalom
-			$date = date('Y-m-d');
-
-			_myntcd_set_title('myip', $my_ip, $date);
-
+		case 'daily': // Napi forgalom
 			// Kapcsolodas az SQL szerverhez
 			db_set_active('myntcd');
 
 			// A mai nap forgalmi adatai orankenti bontasban
 			$SQL = "SELECT date, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM now ";
 			$SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date) ORDER BY date DESC";
-			$result = db_query($SQL, array(':ip' => $my_ip, ':date' => $date));
+			$result = db_query($SQL, array(':ip' => $my_ip, ':date' => $dates['date']));
 
 			// Vissza valtas az alapertelmezett SQL szerverhez
 			db_set_active();
 
-			// Tablazat sorainak elkeszitese
-			$process_vars = array(
-			  'path' => 'my_traffic',
-			  'when' => 'daily',
-			  'result' => $result,
-			  'link' => FALSE,
-			  'only_total' => FALSE,
-			);
-			$rows = _myntcd_process_tabledatas($process_vars);
+			$link = FALSE;
 
-			$build['myntcd_daily_my_traffic'] = array(
-			  '#theme' => 'myntcd_tables',
-			  '#when' => 'daily',
-			  '#rows' => $rows,
-			  '#start' => $date,
-			  '#stop' => '',
-			  '#ip' => $my_ip,
-			  '#path' => 'my_traffic',
-			);
-			return $build;
 			break;
-		case 'weekly':
-		// Heti forgalom
-			$date = date('Y-m-d');
-			$start_week = date('Y-m-d', strtotime('-1 week +1 day'));
-
-			_myntcd_set_title('myip', $my_ip, $start_week, $date);
-
-			_myntcd_create_tmptable('myip', $start_week, $date, $my_ip);
+		case 'weekly': // Heti forgalom
+		case 'monthly': // Havi forgalom
+			_myntcd_create_tmptable('myip', $dates['start'], $dates['stop'], $my_ip);
 
 			// Kapcsolodas az SQL szerverhez
 			db_set_active('myntcd');
@@ -482,89 +453,11 @@ function myntcd_my_traffic($when = '', $date = '') {
 			// Vissza valtas az alapertelmezett SQL szerverhez
 			db_set_active();
 
-			// Tablazat sorainak elkesitese
-			$process_vars = array(
-			  'path' => 'my_traffic',
-			  'when' => 'weekly',
-			  'result' => $result,
-			  'link' => FALSE,
-			  'only_total' => FALSE,
-			);
-			$rows = _myntcd_process_tabledatas($process_vars);
+			$link = FALSE;
 
-			$build['myntcd_weekly_my_traffic'] = array(
-			  '#theme' => 'myntcd_tables',
-			  '#when' => 'weekly',
-			  '#rows' => $rows,
-			  '#start' => $start_week,
-			  '#stop' => $date,
-			  '#ip' => $my_ip,
-			  '#path' => 'my_traffic',
-			);
-			return $build;
 			break;
-		case 'monthly':
-		// Havi forgalom
-			if ($date == '') {
-				$date = date('Y-m-01');
-			}
-			if (!_myntcd_chk_date($date)) {
-				drupal_goto('my_traffic/monthly');
-			} else {
-				$date = date('Y-m-01', strtotime($date));
-			}
-
-			if (strtotime('now') < strtotime($date.' +1 month')) {
-				$end_month = date('Y-m-d');
-			} else {
-				$end_month = date('Y-m-d', strtotime($date.' +1 month -1 day'));
-			}
-
-			_myntcd_set_title('myip', $my_ip, $date, $end_month);
-
-			_myntcd_create_tmptable('myip', $date, $end_month, $my_ip);
-
-			// Kapcsolodas az SQL szerverhez
-			db_set_active('myntcd');
-
-			$SQL = "SELECT date, in_byte, out_byte FROM tmp_table ORDER BY date DESC";
-			$result = db_query($SQL);
-
-			// Vissza valtas az alapertelmezett SQL szerverhez
-			db_set_active();
-
-			// Tablazat sorainak elkesitese
-			$process_vars = array(
-			  'path' => 'my_traffic',
-			  'when' => 'monthly',
-			  'result' => $result,
-			  'link' => FALSE,
-			  'only_total' => FALSE,
-			);
-			$rows = _myntcd_process_tabledatas($process_vars);
-
-			$build['myntcd_monthly_my_traffic'] = array(
-			  '#theme' => 'myntcd_tables',
-			  '#when' => 'monthly',
-			  '#rows' => $rows,
-			  '#start' => $date,
-			  '#stop' => $end_month,
-			  '#ip' => $my_ip,
-			  '#path' => 'my_traffic',
-			);
-			return $build;
-			break;
-		case 'yearly':
-		// Eves forgalom
-			$date = date('Y-m-d');
-			$start_year = date('Y-01-01');
-
-			_myntcd_set_title('myip', $my_ip, date('Y'));
-
-			// $rows = $total = array();
-			// $total['in'] = $total['out'] = 0;
-
-			_myntcd_create_tmptable('myip', $start_year, $date, $my_ip);
+		case 'yearly': // Eves forgalom
+			_myntcd_create_tmptable('myip', $dates['start'], $dates['stop'], $my_ip);
 
 			// Kapcsolodas az SQL szerverhez
 			db_set_active('myntcd');
@@ -576,34 +469,84 @@ function myntcd_my_traffic($when = '', $date = '') {
 			// Vissza valtas az alapertelmezett SQL szerverhez
 			db_set_active();
 
-			// Tablazat sorainak elkeszitese
-			$process_vars = array(
-			  'path' => 'my_traffic',
-			  'when' => 'yearly',
-			  'result' => $result,
-			  'link' => TRUE,
-			  'only_total' => FALSE,
-			);
-			$rows = _myntcd_process_tabledatas($process_vars);
+			$link = TRUE;
 
-			$build['myntcd_yearly_my_traffic'] = array(
-			  '#theme' => 'myntcd_tables',
-			  '#when' => 'yearly',
-			  '#rows' => $rows,
-			  '#start' => $start_year,
-			  '#stop' => '',
-			  '#ip' => $my_ip,
-			  '#path' => 'my_traffic',
-			);
-			return $build;
 			break;
 		default:
 			drupal_goto('my_traffic');
 			break;
 	}
-} // function my_traffic_myntcd()
+
+	// Tablazat sorainak elkeszitese
+	$process_vars = array(
+	  'path' => 'my_traffic',
+	  'when' => $when,
+	  'result' => $result,
+	  'link' => $link,
+	  'only_total' => FALSE,
+	);
+	$rows = _myntcd_process_tabledatas($process_vars);
+
+	$build['myntcd_my_traffic'] = array(
+	  '#theme' => 'myntcd_tables',
+	  '#when' => $when,
+	  '#rows' => $rows,
+	  '#start' => $dates['start'],
+	  '#stop' => $dates['stop'],
+	  '#ip' => $my_ip,
+	  '#path' => 'my_traffic',
+	);
+	return $build;
+}
 
 
+/**
+ * Adott idointervallumnak megfelelo datumokkal ter vissza
+ * @param when (daily/weekly/monthly/yearly)
+ * @param date monthly eseten kapott datum
+ * @return dates
+ */
+function _myntcd_getback_dates($when, $date) {
+	switch ($when) {
+		case '':
+			$dates['date'] = date('Y-m-d');
+			$dates['start'] = '';
+			$dates['stop'] = '';
+			break;
+		case 'daily':
+			$dates['date'] = date('Y-m-d');
+			$dates['start'] = date('Y-m-d');
+			$dates['stop'] = '';
+			break;
+		case 'weekly':
+			$dates['start'] = date('Y-m-d', strtotime('-1 week +1 day'));
+			$dates['stop'] = date('Y-m-d');
+			break;
+		case 'monthly':
+			if ($date == '') {
+				$date = date('Y-m-01');
+			}
+			if (!_myntcd_chk_date($date)) {
+				drupal_goto('my_traffic/monthly');
+			} else {
+				$date = date('Y-m-01', strtotime($date));
+			}
+
+			$dates['start'] = $date;
+
+			if (strtotime('now') < strtotime($date.' +1 month')) {
+				$dates['stop'] = date('Y-m-d');
+			} else {
+				$dates['stop'] = date('Y-m-d', strtotime($date.' +1 month -1 day'));
+			}
+			break;
+		case 'yearly':
+			$dates['start'] = date('Y-01-01');
+			$dates['stop'] = date('Y-m-d');
+			break;
+	}
+	return $dates;
+}
 
 
 /**
@@ -800,7 +743,6 @@ function myntcd_ip_weekly($ip, $date = '') {
 			$date = date('Y-m-d');
 		} elseif (!_myntcd_chk_date($date)) {
 			drupal_goto('myntcd/ip/'.$ip.'/weekly');
-			return;
 		}
 
 		$start_week = date('Y-m-d', strtotime($date.' -1 week +1 day'));
