@@ -171,8 +171,8 @@ function myntcd_menu() {
 
 	$items['myntcd/ip/%/daily'] = array(
 		'title' => 'Daily',
-		'page callback' => 'myntcd_ip_daily',
-		'page arguments' => array(2),
+		'page callback' => 'myntcd_ip',
+		'page arguments' => array(2, 3),
 		'access arguments' => array('traffic manager'),
 		'weight' => 2,
 		'type' => MENU_LOCAL_TASK,
@@ -180,8 +180,8 @@ function myntcd_menu() {
 
 	$items['myntcd/ip/%/weekly'] = array(
 		'title' => 'Weekly',
-		'page callback' => 'myntcd_ip_weekly',
-		'page arguments' => array(2),
+		'page callback' => 'myntcd_ip',
+		'page arguments' => array(2, 3),
 		'access arguments' => array('traffic manager'),
 		'weight' => 4,
 		'type' => MENU_LOCAL_TASK,
@@ -189,8 +189,8 @@ function myntcd_menu() {
 
 	$items['myntcd/ip/%/monthly'] = array(
 		'title' => 'Monthly',
-		'page callback' => 'myntcd_ip_monthly',
-		'page arguments' => array(2),
+		'page callback' => 'myntcd_ip',
+		'page arguments' => array(2, 3),
 		'access arguments' => array('traffic manager'),
 		'weight' => 6,
 		'type' => MENU_LOCAL_TASK,
@@ -198,8 +198,8 @@ function myntcd_menu() {
 
 	$items['myntcd/ip/%/yearly'] = array(
 		'title' => 'Yearly',
-		'page callback' => 'myntcd_ip_yearly',
-		'page arguments' => array(2),
+		'page callback' => 'myntcd_ip',
+		'page arguments' => array(2, 3),
 		'access arguments' => array('traffic manager'),
 		'weight' => 8,
 		'type' => MENU_LOCAL_TASK,
@@ -381,6 +381,7 @@ function myntcd_theme() {
 	);
 }
 
+
 /**
  * myntcd_my_traffic: sajat forgalom megjelenitese
  * @param when (daily/weekly/monthly/yearly)
@@ -388,6 +389,22 @@ function myntcd_theme() {
  * @return build tomb, amiben a tablazatok megjelenitesehez vannak infok
  */
 function myntcd_my_traffic($when = '', $date = '') {
+	if ($date == '') {
+		switch ($when) {
+			case '':
+			case 'daily':
+			case 'weekly':
+				$date = date('Y-m-d');
+				break;
+			case 'monthly':
+				$date = date('Y-m-01');
+				break;
+			case 'yearly':
+				$date = date('Y-01-01');
+				break;
+		}
+	}
+
 	// Kliens gep IP cime
 	$my_ip = $_SERVER['REMOTE_ADDR'];
 
@@ -509,29 +526,20 @@ function myntcd_my_traffic($when = '', $date = '') {
 function _myntcd_getback_dates($when, $date) {
 	switch ($when) {
 		case '':
-			$dates['date'] = date('Y-m-d');
+			$dates['date'] = $date;
 			$dates['start'] = '';
 			$dates['stop'] = '';
 			break;
 		case 'daily':
-			$dates['date'] = date('Y-m-d');
-			$dates['start'] = date('Y-m-d');
+			$dates['date'] = $date;
+			$dates['start'] = $date;
 			$dates['stop'] = '';
 			break;
 		case 'weekly':
-			$dates['start'] = date('Y-m-d', strtotime('-1 week +1 day'));
-			$dates['stop'] = date('Y-m-d');
+			$dates['start'] = date('Y-m-d', strtotime($date.' -1 week +1 day'));
+			$dates['stop'] = $date;
 			break;
 		case 'monthly':
-			if ($date == '') {
-				$date = date('Y-m-01');
-			}
-			if (!_myntcd_chk_date($date)) {
-				drupal_goto('my_traffic/monthly');
-			} else {
-				$date = date('Y-m-01', strtotime($date));
-			}
-
 			$dates['start'] = $date;
 
 			if (strtotime('now') < strtotime($date.' +1 month')) {
@@ -541,12 +549,17 @@ function _myntcd_getback_dates($when, $date) {
 			}
 			break;
 		case 'yearly':
-			$dates['start'] = date('Y-01-01');
-			$dates['stop'] = date('Y-m-d');
+			if (strtotime(date('Y')) > strtotime(date('Y', strtotime($date)))) {
+				$dates['start'] = date('Y', strtotime($date)).'-01-01';
+				$dates['stop'] = date('Y', strtotime($date)).'-12-31';
+			} else {
+				$dates['start'] = $date;
+				$dates['stop'] = date('Y-m-d');
+			}
 			break;
 	}
 	return $dates;
-}
+} // _myntcd_getback_dates()
 
 
 /**
@@ -572,6 +585,7 @@ function myntcd_search_form($form, &$form_state) {
 	return $form;
 } // myntcd_search()
 
+
 /**
  * Ha keresobe beirt ip cim validalasa
  * @param form
@@ -582,6 +596,7 @@ function myntcd_search_form_validate($form, &$form_state) {
 		form_set_error('ip', t('Is not IP address.'));
 	}
 } // myntcd_search_validate()
+
 
 /**
  * myntcd_search_submit: az adott ip cim oldalara ugrik
@@ -603,22 +618,140 @@ function myntcd_search_form_submit($form, &$form_state) {
 	}
 } // myntcd_search_form_submit()
 
+
 /**
  * myntcd_ip: IP traffic summary
- * @param ip
+ * @param ip ip cim
+ * @param when (daily/weekly/monthly/yearly)
+ * @param date kapott datum
+ * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
  */
-function myntcd_ip($ip) {
+function myntcd_ip($ip, $when = '', $date = '') {
+
 	if (_myntcd_is_ip($ip)) {
-		$build['myntcd_ip'] = array(
-		  '#theme' => 'myntcd_rrds',
+
+		if ($date == '') {
+			switch ($when) {
+				case '':
+				case 'daily':
+				case 'weekly':
+					$date = date('Y-m-d');
+					break;
+				case 'monthly':
+					$date = date('Y-m-01');
+					break;
+				case 'yearly':
+					$date = date('Y-01-01');
+					break;
+			}
+		} elseif (!_myntcd_chk_date($date)) {
+			drupal_goto('myntcd/ip/'.$ip.'/'.$when);
+		}
+
+		$dates = _myntcd_getback_dates($when, $date);
+
+		_myntcd_set_title('ip', $ip, $dates['start'], $dates['stop']);
+
+		switch ($when) {
+			case '':
+				$build['myntcd_ip'] = array(
+				  '#theme' => 'myntcd_rrds',
+				  '#ip' => $ip,
+				  '#path' => 'myntcd/ip/'.$ip,
+				);
+				return $build;
+
+				break;
+			case 'daily': // Napi forgalom
+				// utolso nap masik tablaba van
+				if ($dates['date'] == date('Y-m-d')) {
+					$from = "FROM now";
+					$only_total = FALSE;
+				} else {
+					$from = "FROM daily";
+					// Ha nem aktualis nap van egyszerubb tablazat kell
+					$only_total = TRUE;
+				}
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				// A mai nap forgalmi adatai orankenti bontasban
+				$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
+				$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte ".$from." ";
+				$SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date), type ORDER BY date DESC";
+				$result = db_query($SQL, array(':ip' => $ip, ':date' => $dates['date']));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+
+				$link = FALSE;
+
+				break;
+			case 'weekly': // Heti forgalom
+			case 'monthly': // Havi forgalom
+				_myntcd_create_tmptable('ip', $dates['start'], $dates['stop'], $ip);
+
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
+				$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
+				$SQL .= "GROUP BY date, ip, type ORDER BY date DESC";
+				$result = db_query($SQL);
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+
+				$link = TRUE;
+				$only_total = FALSE;
+
+				break;
+			case 'yearly': // Eves forgalom
+				_myntcd_create_tmptable('ip', $dates['start'], $dates['stop'], $ip);
+
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
+				$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
+				$SQL .= "GROUP BY month(date), ip, type ORDER BY date DESC";
+				$result = db_query($SQL);
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+
+				$link = TRUE;
+				$only_total = FALSE;
+
+				break;
+		}
+
+		// Tablazat sorainak elkeszitese
+		$process_vars = array(
+		  'path' => 'myntcd/ip',
+		  'when' => $when,
+		  'result' => $result,
+		  'ip' => $ip,
+		  'link' => $link,
+		  'only_total' => $only_total,
+		);
+		$rows = _myntcd_process_tabledatas($process_vars);
+
+		$build['myntcd_my_traffic'] = array(
+		  '#theme' => 'myntcd_tables',
+		  '#when' => $when,
+		  '#rows' => $rows,
+		  '#start' => $dates['start'],
+		  '#stop' => $dates['stop'],
 		  '#ip' => $ip,
-		  '#path' => 'myntcd/ip/'.$ip,
+		  '#path' => 'myntcd/ip',
 		);
 		return $build;
 	} else {
 		drupal_goto('myntcd');
 	}
-} // function myntcd_ip
+} // myntcd_ip()
+
 
 /**
  * theme_myntcd_rrds: IP traffic RRDs
@@ -665,253 +798,6 @@ function theme_myntcd_rrds($variables) {
 	return $output;
 } // function theme_myntcd_rrds
 
-/**
- * myntcd_ip_daily: IP daily traffic
- * @param ip ip cim
- * @param date kapott datum
- * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
- */
-function myntcd_ip_daily($ip, $date = '') {
-	if (_myntcd_is_ip($ip)) {
-		if ($date == '') {
-			$date = date('Y-m-d');
-		} elseif (!_myntcd_chk_date($date)) {
-			drupal_goto('myntcd/ip/'.$ip.'/daily');
-		}
-
-		_myntcd_set_title('ip', $ip, $date);
-
-		// utolso nap masik tablaba van
-		if ($date == date('Y-m-d')) {
-			$from = "FROM now";
-		} else {
-			$from = "FROM daily";
-		}
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		// A mai nap forgalmi adatai orankenti bontasban
-		$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-		$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte ".$from." ";
-		$SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date), type ORDER BY date DESC";
-		$result = db_query($SQL, array(':ip' => $ip, ':date' => $date));
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		// Ha nem aktualis nap van egyszerubb tablazat kell
-		if ($date != date('Y-m-d')) {
-			$only_total = TRUE;
-		} else {
-			$only_total = FALSE;
-		}
-
-		$process_vars = array(
-		  'path' => 'myntcd/ip',
-		  'when' => 'daily',
-		  'result' => $result,
-		  'ip' => $ip,
-		  'link' => FALSE,
-		  'only_total' => $only_total,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-		$build['myntcd_ip_daily'] = array(
-		  '#theme' => 'myntcd_tables',
-		  '#ip' => $ip,
-		  '#when' => 'daily',
-		  '#rows' => $rows,
-		  '#start' => $date,
-		  '#stop' => '',
-		  '#path' => 'myntcd/ip',
-		);
-		return $build;
-	} else {
-		drupal_goto('myntcd');
-	}
-} // function myntcd_ip_daily
-
-/**
- * myntcd_ip_weekly: IP weekly traffic
- * @param ip ip cim
- * @param date kapott datum
- * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
- */
-function myntcd_ip_weekly($ip, $date = '') {
-	if (_myntcd_is_ip($ip)) {
-		if ($date == '') {
-			$date = date('Y-m-d');
-		} elseif (!_myntcd_chk_date($date)) {
-			drupal_goto('myntcd/ip/'.$ip.'/weekly');
-		}
-
-		$start_week = date('Y-m-d', strtotime($date.' -1 week +1 day'));
-
-		_myntcd_set_title('ip', $ip, $start_week, $date);
-
-		// forgalmi adatok betoltese az atmenti tablaba
-		_myntcd_create_tmptable('ip', $start_week, $date, $ip);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-		$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
-		$SQL .= "GROUP BY date, ip, type ORDER BY date DESC";
-		$result = db_query($SQL);
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/ip',
-		  'when' => 'weekly',
-		  'result' => $result,
-		  'ip' => $ip,
-		  'link' => TRUE,
-		  'only_total' => FALSE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-		$build['myntcd_ip_weekly'] = array(
-		  '#theme' => 'myntcd_tables',
-		  '#ip' => $ip,
-		  '#when' => 'weekly',
-		  '#rows' => $rows,
-		  '#start' => $start_week,
-		  '#stop' => $date,
-		  '#path' => 'myntcd/ip',
-		);
-		return $build;
-	} else {
-		drupal_goto('myntcd');
-	}
-} // function myntcd_ip_weekly
-
-/**
- * myntcd_ip_monthly: IP monthly traffic
- * @param ip ip cim
- * @param month kapott datum
- * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
- */
-function myntcd_ip_monthly($ip, $month = '') {
-	if (_myntcd_is_ip($ip)) {
-		if ($month == '') {
-			$month = date('Y-m');
-		} elseif (!preg_match("/^([123456789][[:digit:]]{3})-(0[1-9]|1[012])$/", $month)) {
-			drupal_goto('myntcd/ip/'.$ip.'/monthly');
-		}
-
-		$start_month = $month.'-01';
-		if ( $month == date('Y-m') ) {
-			$end_month = $month.date('-d');
-		} else {
-			$end_month = date('Y-m-d', strtotime('-1 day', strtotime('+1 month', strtotime($month."-01"))));
-		}
-
-		_myntcd_set_title('ip', $ip, $start_month, $end_month);
-
-		// forgalmi adatok betoltese az atmenti tablaba
-		_myntcd_create_tmptable('ip', $start_month, $end_month, $ip);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-		$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
-		$SQL .= "GROUP BY date, ip, type ORDER BY date DESC";
-		$result = db_query($SQL);
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/ip',
-		  'when' => 'monthly',
-		  'result' => $result,
-		  'ip' => $ip,
-		  'link' => TRUE,
-		  'only_total' => FALSE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-		$build['myntcd_ip_monthly'] = array(
-		  '#theme' => 'myntcd_tables',
-		  '#ip' => $ip,
-		  '#when' => 'monthly',
-		  '#rows' => $rows,
-		  '#start' => $start_month,
-		  '#stop' => $end_month,
-		  '#path' => 'myntcd/ip',
-		);
-		return $build;
-	} else {
-		drupal_goto('myntcd');
-	}
-} // function myntcd_ip_monthly
-
-/**
- * myntcd_ip_yearly: IP yearly traffic
- * @param ip ip cim
- * @param year kapott datum
- * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
- */
-function myntcd_ip_yearly($ip, $year = '') {
-	if (_myntcd_is_ip($ip)) {
-		if ($year == '') {
-			$year = date('Y');
-		} elseif (!preg_match("/^([123456789][[:digit:]]{3})$/", $year)) {
-			drupal_goto('myntcd/ip/'.$ip.'/yearly');
-		}
-
-		if ( $year == date('Y') ) {
-			$start_year = date('Y-01-01');
-			$stop_year = date('Y-m-d');
-		} else {
-			$start_year = $year.'-01-01';
-			$stop_year = $year.'-12-31';
-		}
-
-		_myntcd_set_title('ip', $ip, $start_year, $stop_year);
-
-		// forgalmi adatok betoltese az atmenti tablaba
-		_myntcd_create_tmptable('ip', $start_year, $stop_year, $ip);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-		$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
-		$SQL .= "GROUP BY month(date), ip, type ORDER BY date DESC";
-		$result = db_query($SQL);
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/ip',
-		  'when' => 'yearly',
-		  'result' => $result,
-		  'ip' => $ip,
-		  'link' => TRUE,
-		  'only_total' => FALSE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-		$build['myntcd_ip_yearly'] = array(
-		  '#theme' => 'myntcd_tables',
-		  '#ip' => $ip,
-		  '#when' => 'yearly',
-		  '#rows' => $rows,
-		  '#start' => $start_year,
-		  '#stop' => $stop_year,
-		  '#path' => 'myntcd/ip',
-		);
-		return $build;
-	} else {
-		drupal_goto('myntcd');
-	}
-} // function myntcd_ip_yearly
 
 /**
  * theme_myntcd_when: egyseges theme
@@ -1074,13 +960,13 @@ function _myntcd_navigation($ip, $when, $start, $stop, $path) {
 			$minus_date = $start.' -1 month';
 			$plus_date = $start.' +1 month';
 			$show_next_date = $stop;
-			$date_format = 'Y-m';
+			$date_format = 'Y-m-01';
 			break;
 		case 'yearly':
 			$minus_date = $start.' -1 year';
 			$plus_date = $start.' +1 year';
 			$show_next_date = $stop;
-			$date_format = 'Y';
+			$date_format = 'Y-01-01';
 			break;
 	}
 
@@ -1755,11 +1641,7 @@ function _myntcd_process_tabledatas($variables) {
 					case 'yearly':
 						$format_date = format_date(strtotime($row['date']), 'custom', 'Y. F');
 						if ($link) {
-							if ($path == 'my_traffic') {
-								$link_date_format = 'Y-m-01';
-							} else {
-								$link_date_format = 'Y-m';
-							}
+							$link_date_format = 'Y-m-01';
 
 							$row['date'] = l(
 								$format_date,
