@@ -208,17 +208,16 @@ function myntcd_menu() {
 	// IP tartomanyok
 	$items['myntcd/iprange'] = array(
 		'title' => 'IP Ranges',
-		'page callback' => 'myntcd_iprange_list',
+		'page callback' => 'myntcd_iprange',
 		'access arguments' => array('traffic manager'),
 		'weight' => 3,
 		'type' => MENU_NORMAL_ITEM,
 	);
 
-	// IP tartomanyok
 	$items['myntcd/iprange/%'] = array(
 		'title' => '!iprange',
 		'title arguments' => array('!iprange' => 2),
-		'page callback' => 'myntcd_iprange_daily',
+		'page callback' => 'myntcd_iprange',
 		'page arguments' => array(2),
 		'access arguments' => array('traffic manager'),
 		'weight' => 3,
@@ -226,8 +225,8 @@ function myntcd_menu() {
 
 	$items['myntcd/iprange/%/daily'] = array(
 		'title' => 'Daily',
-		'page callback' => 'myntcd_iprange_daily',
-		'page arguments' => array(2),
+		'page callback' => 'myntcd_iprange',
+		'page arguments' => array(2, 3),
 		'access arguments' => array('traffic manager'),
 		'weight' => 2,
 		'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -235,8 +234,8 @@ function myntcd_menu() {
 
 	$items['myntcd/iprange/%/weekly'] = array(
 		'title' => 'Weekly',
-		'page callback' => 'myntcd_iprange_weekly',
-		'page arguments' => array(2),
+		'page callback' => 'myntcd_iprange',
+		'page arguments' => array(2, 3),
 		'access arguments' => array('traffic manager'),
 		'weight' => 4,
 		'type' => MENU_LOCAL_TASK,
@@ -244,8 +243,8 @@ function myntcd_menu() {
 
 	$items['myntcd/iprange/%/monthly'] = array(
 		'title' => 'Monthly',
-		'page callback' => 'myntcd_iprange_monthly',
-		'page arguments' => array(2),
+		'page callback' => 'myntcd_iprange',
+		'page arguments' => array(2, 3),
 		'access arguments' => array('traffic manager'),
 		'weight' => 6,
 		'type' => MENU_LOCAL_TASK,
@@ -253,8 +252,8 @@ function myntcd_menu() {
 
 	$items['myntcd/iprange/%/yearly'] = array(
 		'title' => 'Yearly',
-		'page callback' => 'myntcd_iprange_yearly',
-		'page arguments' => array(2),
+		'page callback' => 'myntcd_iprange',
+		'page arguments' => array(2, 3),
 		'access arguments' => array('traffic manager'),
 		'weight' => 8,
 		'type' => MENU_LOCAL_TASK,
@@ -389,26 +388,10 @@ function myntcd_theme() {
  * @return build tomb, amiben a tablazatok megjelenitesehez vannak infok
  */
 function myntcd_my_traffic($when = '', $date = '') {
-	if ($date == '') {
-		switch ($when) {
-			case '':
-			case 'daily':
-			case 'weekly':
-				$date = date('Y-m-d');
-				break;
-			case 'monthly':
-				$date = date('Y-m-01');
-				break;
-			case 'yearly':
-				$date = date('Y-01-01');
-				break;
-		}
-	}
-
 	// Kliens gep IP cime
 	$my_ip = $_SERVER['REMOTE_ADDR'];
 
-	$dates = _myntcd_getback_dates($when, $date);
+	$dates = _myntcd_getback_dates($when, $date, 'my_traffic');
 
 	_myntcd_set_title('myip', $my_ip, $dates['start'], $dates['stop']);
 
@@ -514,7 +497,7 @@ function myntcd_my_traffic($when = '', $date = '') {
 	  '#path' => 'my_traffic',
 	);
 	return $build;
-}
+} // function myntcd_my_traffic()
 
 
 /**
@@ -523,7 +506,25 @@ function myntcd_my_traffic($when = '', $date = '') {
  * @param date monthly eseten kapott datum
  * @return dates
  */
-function _myntcd_getback_dates($when, $date) {
+function _myntcd_getback_dates($when, $date, $path) {
+	if ($date == '') {
+		switch ($when) {
+			case '':
+			case 'daily':
+			case 'weekly':
+				$date = date('Y-m-d');
+				break;
+			case 'monthly':
+				$date = date('Y-m-01');
+				break;
+			case 'yearly':
+				$date = date('Y-01-01');
+				break;
+		}
+	} elseif (!_myntcd_chk_date($date)) {
+		drupal_goto($path.'/'.$when);
+	}
+
 	switch ($when) {
 		case '':
 			$dates['date'] = $date;
@@ -558,8 +559,9 @@ function _myntcd_getback_dates($when, $date) {
 			}
 			break;
 	}
+
 	return $dates;
-} // _myntcd_getback_dates()
+} // function _myntcd_getback_dates()
 
 
 /**
@@ -627,28 +629,9 @@ function myntcd_search_form_submit($form, &$form_state) {
  * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
  */
 function myntcd_ip($ip, $when = '', $date = '') {
-
 	if (_myntcd_is_ip($ip)) {
 
-		if ($date == '') {
-			switch ($when) {
-				case '':
-				case 'daily':
-				case 'weekly':
-					$date = date('Y-m-d');
-					break;
-				case 'monthly':
-					$date = date('Y-m-01');
-					break;
-				case 'yearly':
-					$date = date('Y-01-01');
-					break;
-			}
-		} elseif (!_myntcd_chk_date($date)) {
-			drupal_goto('myntcd/ip/'.$ip.'/'.$when);
-		}
-
-		$dates = _myntcd_getback_dates($when, $date);
+		$dates = _myntcd_getback_dates($when, $date, 'myntcd/ip/'.$ip);
 
 		_myntcd_set_title('ip', $ip, $dates['start'], $dates['stop']);
 
@@ -750,7 +733,7 @@ function myntcd_ip($ip, $when = '', $date = '') {
 	} else {
 		drupal_goto('myntcd');
 	}
-} // myntcd_ip()
+} // function myntcd_ip()
 
 
 /**
@@ -1035,408 +1018,151 @@ function _myntcd_set_title($from, $ip, $start = '', $stop = '') {
 	}
 }
 
+
 /**
- * myntcd_iprange_list: list iprange
+ * Ip tartomanyok megjelenitese
+ * @param iprange adott ip tartomany
+ * @param when (daily/weekly/monthly/yearly)
+ * @param date datum
  * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
  */
-function myntcd_iprange_list() {
-	// Kapcsolodas az SQL szerverhez
-	db_set_active('myntcd');
+function myntcd_iprange($iprange = '', $when = '', $date = '') {
+	if ($iprange == '' && $when == '') {
+		// Kapcsolodas az SQL szerverhez
+		db_set_active('myntcd');
 
-	// IP tartomanyok listazasa
-	$SQL = "SELECT iprange FROM ipranges ORDER BY iprange ASC";
-	$result = db_query($SQL);
+		// IP tartomanyok listazasa
+		$SQL = "SELECT iprange FROM ipranges ORDER BY iprange ASC";
+		$result = db_query($SQL);
 
-	// Vissza valtas az alapertelmezett SQL szerverhez
-	db_set_active();
+		// Vissza valtas az alapertelmezett SQL szerverhez
+		db_set_active();
 
-	$rows = array();
-	$rows[] = array(
-		array('data' => l(t('All'), 'myntcd/iprange/all') ),
-		array('data' => l(t('Daily'), 'myntcd/iprange/all') ),
-		array('data' => l(t('Weekly'), 'myntcd/iprange/all/weekly') ),
-		array('data' => l(t('Monthly'), 'myntcd/iprange/all/monthly') ),
-		array('data' => l(t('Yearly'), 'myntcd/iprange/all/yearly') ),
-	);
+		$rows = array();
+		$rows[] = array(
+			array('data' => l(t('All'), 'myntcd/iprange/all') ),
+			array('data' => l(t('Daily'), 'myntcd/iprange/all') ),
+			array('data' => l(t('Weekly'), 'myntcd/iprange/all/weekly') ),
+			array('data' => l(t('Monthly'), 'myntcd/iprange/all/monthly') ),
+			array('data' => l(t('Yearly'), 'myntcd/iprange/all/yearly') ),
+		);
 
-	while ($row = $result->fetchAssoc()) {
-		if ( _myntcd_is_ip($row['iprange']) ) {
-			$rows[] = array(
-				array('data' => l($row['iprange'], 'myntcd/iprange/'.$row['iprange']) ),
-				array('data' => l(t('Daily'), 'myntcd/iprange/'.$row['iprange']) ),
-				array('data' => l(t('Weekly'), 'myntcd/iprange/'.$row['iprange'].'/weekly') ),
-				array('data' => l(t('Monthly'), 'myntcd/iprange/'.$row['iprange'].'/monthly') ),
-				array('data' => l(t('Yearly'), 'myntcd/iprange/'.$row['iprange'].'/yearly') ),
-			);
+		while ($row = $result->fetchAssoc()) {
+			if ( _myntcd_is_ip($row['iprange']) ) {
+				$rows[] = array(
+					array('data' => l($row['iprange'], 'myntcd/iprange/'.$row['iprange']) ),
+					array('data' => l(t('Daily'), 'myntcd/iprange/'.$row['iprange']) ),
+					array('data' => l(t('Weekly'), 'myntcd/iprange/'.$row['iprange'].'/weekly') ),
+					array('data' => l(t('Monthly'), 'myntcd/iprange/'.$row['iprange'].'/monthly') ),
+					array('data' => l(t('Yearly'), 'myntcd/iprange/'.$row['iprange'].'/yearly') ),
+				);
+			}
 		}
-	}
 
-	$build['myntcd_iprange_list'] = array(
-	  '#theme' => 'myntcd_tables',
-	  '#ip' => '',
-	  '#when' => 'all',
-	  '#rows' => $rows,
-	  '#start' => '',
-	  '#stop' => '',
-	  '#path' => 'myntcd/iprange_list',
-	);
-	return $build;
-} // function myntcd_iprange_list
+		$dates['start'] = '';
+		$dates['stop'] = '';
+		$path = 'myntcd/iprange_list';
 
-/**
- * myntcd_iprange_daily: iprange daily traffic
- * @param iprange adott ip tartomany
- * @param date datum
- * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
- */
-function myntcd_iprange_daily($iprange, $date = '') {
-	$output = '';
+	} elseif (_myntcd_is_ip($iprange) || $iprange == 'all') {
 
-	if ($date == '') {
-		$date = date('Y-m-d');
-	} elseif (!_myntcd_chk_date($date)) {
-		drupal_goto('myntcd/iprange/'.$iprange.'/daily');
-		return;
-	}
+		if ($when == '') {
+			$when = 'daily';
+		}
 
-	_myntcd_set_title('iprange', $iprange, $date);
+		$dates = _myntcd_getback_dates($when, $date, 'myntcd/iprange/'.$iprange);
 
-	if ($date == date('Y-m-d')) {
-		$nowordaily = "now";
-	} else {
-		$nowordaily = "daily";
-	}
+		_myntcd_set_title('iprange', $iprange, $dates['start'], $dates['stop']);
 
-	if ($iprange == 'all') {
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
+		switch ($when) {
+			case 'daily': // Napi forgalom
+				if ($dates['date'] == date('Y-m-d')) {
+					$nowordaily = "now";
+				} else {
+					$nowordaily = "daily";
+				}
 
-		$SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM($nowordaily.in_byte) AS in_byte, ";
-		$SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
-		$SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date ";
-		$SQL .= "GROUP BY ipranges.ipr_id ORDER BY $nowordaily.ip";
-		$result = db_query($SQL, array(':date' => $date));
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
 
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
+				if ($iprange == 'all') {
+					$SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM($nowordaily.in_byte) AS in_byte, ";
+					$SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
+					$SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date ";
+					$SQL .= "GROUP BY ipranges.ipr_id ORDER BY $nowordaily.ip";
+					$result = db_query($SQL, array(':date' => $dates['date']));
+				} else {
+					// IP tartomanyhoz tartozo napi forgalom
+					$SQL = "SELECT ipranges.iprange, $nowordaily.ip, SUM($nowordaily.in_byte) AS in_byte, ";
+					$SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
+					$SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date AND ipranges.iprange = :iprange ";
+					$SQL .= "GROUP BY $nowordaily.ip ORDER BY total DESC";
+					$result = db_query($SQL, array(':date' => $dates['date'], ':iprange' => $iprange));
+				}
 
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+				break;
+			case 'weekly': // Heti forgalom
+			case 'monthly': // Havi forgalom
+			case 'yearly': // Eves forgalom
+				_myntcd_create_tmptable('iprange', $dates['start'], $dates['stop'], $iprange);
+
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				if ($iprange == 'all') {
+					$SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM(tmp_table.in_byte) AS in_byte, ";
+					$SQL .= "SUM(tmp_table.out_byte) AS out_byte, SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
+					$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id ";
+					$SQL .= "GROUP BY ipranges.ipr_id ORDER BY tmp_table.ip";
+					$result = db_query($SQL);
+				} else {
+					$SQL = "SELECT ipranges.iprange, tmp_table.ip, SUM(tmp_table.in_byte) AS in_byte, SUM(tmp_table.out_byte) AS out_byte, ";
+					$SQL .= "SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
+					$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id AND ipranges.iprange = :iprange ";
+					$SQL .= "GROUP BY tmp_table.ip ORDER BY total DESC";
+					$result = db_query($SQL, array(':iprange' => $iprange));
+				}
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+				break;
+		}
+
+		if ($iprange == 'all') {
+			$process_vpath = 'myntcd/iprange/all';
+		} else {
+			$process_vpath = 'myntcd/iprange';
+		}
+
+		// Tablazat sorainak elkeszitese
 		$process_vars = array(
-		  'path' => 'myntcd/iprange/all',
-		  'when' => 'daily',
+		  'path' => $process_vpath,
+		  'when' => $when,
 		  'result' => $result,
 		  'date' => $date,
-		  'link' => TRUE,
+			'link' => TRUE,
 		);
 		$rows = _myntcd_process_tabledatas($process_vars);
 
-	} elseif ( _myntcd_is_ip($iprange) ) {
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		// IP tartomanyhoz tartozo napi forgalom
-		$SQL = "SELECT ipranges.iprange, $nowordaily.ip, SUM( $nowordaily.in_byte ) AS in_byte, SUM( $nowordaily.out_byte ) AS out_byte, ";
-		$SQL .= "SUM( $nowordaily.in_byte ) + SUM( $nowordaily.out_byte ) AS total ";
-		$SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date( $nowordaily.date ) = :date AND ipranges.iprange = :iprange ";
-		$SQL .= "GROUP BY $nowordaily.ip ORDER BY total DESC";
-		$result = db_query($SQL, array(':date' => $date, ':iprange' => $iprange));
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/iprange',
-		  'when' => 'daily',
-		  'result' => $result,
-		  'date' => $date,
-		  'link' => TRUE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
+		$path = 'myntcd/iprange';
 
 	} else {
 		drupal_goto('myntcd/iprange');
 	}
 
-	$build['myntcd_iprange_daily'] = array(
+	$build['myntcd_iprange'] = array(
 	  '#theme' => 'myntcd_tables',
-	  '#ip' => $iprange,
-	  '#when' => 'daily',
+	  '#when' => $when,
 	  '#rows' => $rows,
-	  '#start' => $date,
-	  '#stop' => '',
-	  '#path' => 'myntcd/iprange',
+	  '#start' => $dates['start'],
+	  '#stop' => $dates['stop'],
+	  '#ip' => $iprange,
+	  '#path' => $path,
 	);
 	return $build;
-} // function myntcd_iprange_daily
+} // function myntcd_iprange()
 
-/**
- * myntcd_iprange_weekly: iprange weekly traffic
- * @param iprange adott ip tartomany
- * @param date datum
- * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
- */
-function myntcd_iprange_weekly($iprange, $date = '') {
-	$output = '';
-
-	if ($date == '') {
-		$date = date('Y-m-d');
-	} elseif (!_myntcd_chk_date($date)) {
-		drupal_goto('myntcd/iprange/'.$iprange.'/weekly');
-		return;
-	}
-
-	$start_week = date('Y-m-d', strtotime($date.' -1 week +1 day'));
-
-	_myntcd_set_title('iprange', $iprange, $start_week, $date);
-
-	if ($iprange == 'all') {
-
-		// Seged tabla definialasa es feltoltese
-		_myntcd_create_tmptable('iprange', $start_week, $date);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM(tmp_table.in_byte) AS in_byte, ";
-		$SQL .= "SUM(tmp_table.out_byte) AS out_byte, SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
-		$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id ";
-		$SQL .= "GROUP BY ipranges.ipr_id ORDER BY tmp_table.ip";
-		$result = db_query($SQL);
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/iprange/all',
-		  'when' => 'weekly',
-		  'result' => $result,
-		  'date' => $date,
-		  'link' => TRUE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-	} elseif ( _myntcd_is_ip($iprange) ) {
-
-		// Seged tabla definialasa es feltoltese
-		_myntcd_create_tmptable('iprange', $start_week, $date);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT ipranges.iprange, tmp_table.ip, SUM( tmp_table.in_byte ) AS in_byte, SUM( tmp_table.out_byte ) AS out_byte, ";
-		$SQL .= "SUM( tmp_table.in_byte ) + SUM( tmp_table.out_byte ) AS total ";
-		$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id AND ipranges.iprange = :iprange ";
-		$SQL .= "GROUP BY tmp_table.ip ORDER BY total DESC";
-		$result = db_query($SQL, array(':iprange' => $iprange));
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/iprange',
-		  'when' => 'weekly',
-		  'result' => $result,
-		  'date' => $date,
-		  'link' => TRUE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-	} else {
-		drupal_goto('myntcd/iprange');
-	}
-
-	$build['myntcd_iprange_weekly'] = array(
-	  '#theme' => 'myntcd_tables',
-	  '#ip' => $iprange,
-	  '#when' => 'weekly',
-	  '#rows' => $rows,
-	  '#start' => $start_week,
-	  '#stop' => $date,
-	  '#path' => 'myntcd/iprange',
-	);
-	return $build;
-} // function myntcd_iprange_weekly
-
-/**
- * myntcd_iprange_monthly: iprange monthly traffic
- * @param iprange adott ip tartomany
- * @param date datum
- * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
- */
-function myntcd_iprange_monthly($iprange, $month = '') {
-	$output = '';
-
-	if ($month == '') {
-		$month = date('Y-m');
-	} elseif (!preg_match("/^([123456789][[:digit:]]{3})-(0[1-9]|1[012])$/", $month)) {
-		drupal_goto('myntcd/iprange/'.$iprange.'/monthly');
-	}
-
-	$start_month = $month.'-01';
-	if ( $month == date('Y-m') ) {
-		$end_month = $month.date('-d');
-	} else {
-		$end_month = date('Y-m-d', strtotime('-1 day', strtotime('+1 month', strtotime($month."-01"))));
-	}
-
-	_myntcd_set_title('iprange', $iprange, $start_month, $end_month);
-
-	if ($iprange == 'all') {
-		// Seged tabla definialasa es feltoltese
-		_myntcd_create_tmptable('iprange', $start_month, $end_month);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM(tmp_table.in_byte) AS in_byte, ";
-		$SQL .= "SUM(tmp_table.out_byte) AS out_byte, SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
-		$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id ";
-		$SQL .= "GROUP BY ipranges.ipr_id ORDER BY tmp_table.ip";
-		$result = db_query($SQL);
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/iprange/all',
-		  'when' => 'monthly',
-		  'result' => $result,
-		  'date' => $month,
-		  'link' => TRUE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-	} elseif ( _myntcd_is_ip($iprange) ) {
-		// Seged tabla definialasa es feltoltese
-		_myntcd_create_tmptable('iprange', $start_month, $end_month);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT ipranges.iprange, tmp_table.ip, SUM( tmp_table.in_byte ) AS in_byte, SUM( tmp_table.out_byte ) AS out_byte, ";
-		$SQL .= "SUM( tmp_table.in_byte ) + SUM( tmp_table.out_byte ) AS total ";
-		$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id AND ipranges.iprange = :iprange ";
-		$SQL .= "GROUP BY tmp_table.ip ORDER BY total DESC";
-		$result = db_query($SQL, array(':iprange' => $iprange));
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/iprange',
-		  'when' => 'monthly',
-		  'result' => $result,
-		  'date' => $month,
-		  'link' => TRUE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-	} else {
-		drupal_goto('myntcd/iprange');
-	}
-
-	$build['myntcd_iprange_monthly'] = array(
-	  '#theme' => 'myntcd_tables',
-	  '#ip' => $iprange,
-	  '#when' => 'monthly',
-	  '#rows' => $rows,
-	  '#start' => $start_month,
-	  '#stop' => $end_month,
-	  '#path' => 'myntcd/iprange',
-	);
-	return $build;
-} // function myntcd_iprange_monthly
-
-/**
- * myntcd_iprange_yearly: iprange yearly traffic
- * @param iprange adott ip tartomany
- * @param date datum
- * @return build tomb, amiben a tablazat megjelenitesehez vannak infok
- */
-function myntcd_iprange_yearly($iprange, $year = '') {
-	$output = '';
-
-	// Eves toplista
-	if ($year == '') {
-		$year = date('Y');
-	} elseif (!preg_match("/^([123456789][[:digit:]]{3})$/", $year)) {
-		drupal_goto('myntcd/iprange/'.$iprange.'/yearly');
-	}
-
-	if ( $year == date('Y') ) {
-		$start_year = date('Y-01-01');
-		$stop_year = date('Y-m-d');
-	} else {
-		$start_year = $year.'-01-01';
-		$stop_year = $year.'-12-31';
-	}
-
-	_myntcd_set_title('iprange', $iprange, $start_year, $stop_year);
-
-	if ($iprange == 'all') {
-		// Seged tabla definialasa es feltoltese
-		_myntcd_create_tmptable('iprange', $start_year, $stop_year);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM(tmp_table.in_byte) AS in_byte, ";
-		$SQL .= "SUM(tmp_table.out_byte) AS out_byte, SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
-		$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id ";
-		$SQL .= "GROUP BY ipranges.ipr_id ORDER BY tmp_table.ip";
-		$result = db_query($SQL);
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/iprange/all',
-		  'when' => 'yearly',
-		  'result' => $result,
-		  'date' => $year,
-		  'link' => TRUE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-	} elseif ( _myntcd_is_ip($iprange) ) {
-		// Seged tabla definialasa es feltoltese
-		_myntcd_create_tmptable('iprange', $start_year, $stop_year);
-
-		// Kapcsolodas az SQL szerverhez
-		db_set_active('myntcd');
-
-		$SQL = "SELECT ipranges.iprange, tmp_table.ip, SUM( tmp_table.in_byte ) AS in_byte, SUM( tmp_table.out_byte ) AS out_byte, ";
-		$SQL .= "SUM( tmp_table.in_byte ) + SUM( tmp_table.out_byte ) AS total ";
-		$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id AND ipranges.iprange = :iprange ";
-		$SQL .= "GROUP BY tmp_table.ip ORDER BY total DESC";
-		$result = db_query($SQL, array(':iprange' => $iprange));
-
-		// Vissza valtas az alapertelmezett SQL szerverhez
-		db_set_active();
-
-		$process_vars = array(
-		  'path' => 'myntcd/iprange',
-		  'when' => 'yearly',
-		  'result' => $result,
-		  'date' => $year,
-		  'link' => TRUE,
-		);
-		$rows = _myntcd_process_tabledatas($process_vars);
-
-	} else {
-		drupal_goto('myntcd/iprange');
-	}
-
-	$build['myntcd_iprange_yearly'] = array(
-	  '#theme' => 'myntcd_tables',
-	  '#ip' => $iprange,
-	  '#when' => 'yearly',
-	  '#rows' => $rows,
-	  '#start' => $start_year,
-	  '#stop' => $stop_year,
-	  '#path' => 'myntcd/iprange',
-	);
-	return $build;
-} // function myntcd_iprange_yearly
 
 /**
  * myntcd_top: traffic toplist
