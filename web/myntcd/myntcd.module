@@ -10,6 +10,9 @@
  */
 
 
+/* ========== Main hook functions ========== */
+
+
 /**
  * Implementation of hook_help().
  * Display help and module information
@@ -387,6 +390,9 @@ function myntcd_theme() {
 } // function myntcd_theme()
 
 
+/* ========== Form functions ========== */
+
+
 /**
  * myntcd_my_traffic: sajat forgalom megjelenitese
  * @param when (daily/weekly/monthly/yearly)
@@ -504,70 +510,6 @@ function myntcd_my_traffic($when = '', $date = '') {
 	);
 	return $build;
 } // function myntcd_my_traffic()
-
-
-/**
- * Adott idointervallumnak megfelelo datumokkal ter vissza
- * @param when (daily/weekly/monthly/yearly)
- * @param date monthly eseten kapott datum
- * @return dates
- */
-function _myntcd_getback_dates($when, $date, $path) {
-	if ($date == '') {
-		switch ($when) {
-			case '':
-			case 'daily':
-			case 'weekly':
-				$date = date('Y-m-d');
-				break;
-			case 'monthly':
-				$date = date('Y-m-01');
-				break;
-			case 'yearly':
-				$date = date('Y-01-01');
-				break;
-		}
-	} elseif (!_myntcd_chk_date($date)) {
-		drupal_goto($path.'/'.$when);
-	}
-
-	switch ($when) {
-		case '':
-			$dates['date'] = $date;
-			$dates['start'] = '';
-			$dates['stop'] = '';
-			break;
-		case 'daily':
-			$dates['date'] = $date;
-			$dates['start'] = $date;
-			$dates['stop'] = '';
-			break;
-		case 'weekly':
-			$dates['start'] = date('Y-m-d', strtotime($date.' -1 week +1 day'));
-			$dates['stop'] = $date;
-			break;
-		case 'monthly':
-			$dates['start'] = $date;
-
-			if (strtotime('now') < strtotime($date.' +1 month')) {
-				$dates['stop'] = date('Y-m-d');
-			} else {
-				$dates['stop'] = date('Y-m-d', strtotime($date.' +1 month -1 day'));
-			}
-			break;
-		case 'yearly':
-			if (strtotime(date('Y')) > strtotime(date('Y', strtotime($date)))) {
-				$dates['start'] = date('Y', strtotime($date)).'-01-01';
-				$dates['stop'] = date('Y', strtotime($date)).'-12-31';
-			} else {
-				$dates['start'] = $date;
-				$dates['stop'] = date('Y-m-d');
-			}
-			break;
-	}
-
-	return $dates;
-} // function _myntcd_getback_dates()
 
 
 /**
@@ -740,291 +682,6 @@ function myntcd_ip($ip, $when = '', $date = '') {
 		drupal_goto('myntcd');
 	}
 } // function myntcd_ip()
-
-
-/**
- * theme_myntcd_rrds: IP traffic RRDs
- * @param variables a smikeleshez szukseges adatokat tartalmazza
- * @return adott oldallal ter vissza
- */
-function theme_myntcd_rrds($variables) {
-	$ip = $variables['ip'];
-	$path = $variables['path'];
-	$output = '';
-
-	$output .= '<div class="myntcd_rrd_img">';
-	$output .= l(
-		'<img src="'.url('myntcd/img/'.$ip.'/daily').'" alt="myntcd_daily_image" />',
-		$path.'/daily',
-		array('html' => TRUE)
-	);
-	$output .= '</div>';
-
-	$output .= '<div class="myntcd_rrd_img">';
-	$output .= l(
-		'<img src="'.url('myntcd/img/'.$ip.'/weekly').'" alt="myntcd_weekly_image" />',
-		$path.'/weekly',
-		array('html' => TRUE)
-	);
-	$output .= '</div>';
-
-	$output .= '<div class="myntcd_rrd_img">';
-	$output .= l(
-		'<img src="'.url('myntcd/img/'.$ip.'/monthly').'" alt="myntcd_monthly_image" />',
-		$path.'/monthly',
-		array('html' => TRUE)
-	);
-	$output .= '</div>';
-
-	$output .= '<div class="myntcd_rrd_img">';
-	$output .= l(
-		'<img src="'.url('myntcd/img/'.$ip.'/yearly').'" alt="myntcd_yearly_image" />',
-		$path.'/yearly',
-		array('html' => TRUE)
-	);
-	$output .= '</div>';
-
-	return $output;
-} // function theme_myntcd_rrds
-
-
-/**
- * theme_myntcd_when: egyseges theme
- * @param variables a smikeleshez szukseges adatokat tartalmazza
- * @return adott oldallal ter vissza
- */
-function theme_myntcd_tables($variables) {
-
-	$ip = $variables['ip'];
-	$when = $variables['when'];
-	$rows = $variables['rows'];
-	$start = $variables['start'];
-	$stop = $variables['stop'];
-	$path = $variables['path'];
-
-	$output = '';
-
-	if ($path == 'myntcd/ip' || $path == 'myntcd/iprange' || $path == 'myntcd/top') {
-		$output .= _myntcd_navigation($ip, $when, $start, $stop, $path);
-	}
-	if ($path == 'myntcd/ip' || $path == 'my_traffic') {
-		$output .= '<div class="myntcd_rrd_img">';
-		$output .= '<img src="'.url('myntcd/img/'.$ip.'/'.$when.'/'.$start.'/'.$stop).'" alt="myntcd_'.$when.'_image" />';
-		$output .= '</div>';
-	}
-
-	if ($path == 'myntcd/ip') {
-		$header = array(
-			array('data' => t('Time')),
-			array('data' => t('Type')),
-			array('data' => t('In Packet'), 'class' => 'myntcd_header_right'),
-			array('data' => t('Out Packet'), 'class' => 'myntcd_header_right'),
-			array('data' => t('Total Packet'), 'class' => 'myntcd_header_right'),
-			array('data' => t('In Byte'), 'class' => 'myntcd_header_right'),
-			array('data' => t('Out Byte'), 'class' => 'myntcd_header_right'),
-			array('data' => t('Total Byte'), 'class' => 'myntcd_header_right'),
-			array('data' => t('Out%'), 'class' => 'myntcd_header_right'),
-		);
-	} elseif ($path == 'myntcd/iprange_list') {
-		$header = array(
-			array('data' => t('IP Address')),
-			array('data' => t('Operations'), 'colspan' => '4'),
-		);
-	} else {
-		if ($path == 'my_traffic') {
-			$first_column = 'Time';
-		} else {
-			$first_column = 'IP Address';
-		}
-
-		$header = array(
-			array('data' => t($first_column)),
-			array('data' => t('In Byte'), 'class' => 'myntcd_header_right'),
-			array('data' => t('Out Byte'), 'class' => 'myntcd_header_right'),
-			array('data' => t('Total Byte'), 'class' => 'myntcd_header_right'),
-			array('data' => t('Out%'), 'class' => 'myntcd_header_right'),
-		);
-	}
-
-	if ($path == 'myntcd/top_all' || $path == 'myntcd/top') {
-		$output .= '<div class = "myntcd_top_label">';
-		if ($path == 'myntcd/top_all') {
-			$output .= t('Daily Top !num total byte', array('!num' => '20'));
-		} else {
-			$output .= t(' Top !num in byte', array('!num' => '20'));
-		}
-		$output .= ':</div>';
-
-		$output .= '<div class = "myntcd_top_table">';
-		if ($path == 'myntcd/top_all') {
-			$table = $rows['daily'];
-		} else {
-			$table = $rows['in'];
-		}
-		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
-		$output .= '</div>';
-
-		$output .= '<div class = "myntcd_top_label">';
-		if ($path == 'myntcd/top_all') {
-			$output .= t('Weekly Top !num total byte', array('!num' => '20'));
-		} else {
-			$output .= t(' Top !num out byte', array('!num' => '20'));
-		}
-		$output .= ':</div>';
-
-		$output .= '<div class = "myntcd_top_table">';
-		if ($path == 'myntcd/top_all') {
-			$table = $rows['weekly'];
-		} else {
-			$table = $rows['out'];
-		}
-		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
-		$output .= '</div>';
-
-		$output .= '<div class = "myntcd_top_label">';
-		if ($path == 'myntcd/top_all') {
-			$output .= t('Monthly Top !num total byte', array('!num' => '20'));
-		} else {
-			$output .= t(' Top !num total byte', array('!num' => '20'));
-		}
-		$output .= ':</div>';
-
-		$output .= '<div class = "myntcd_top_table">';
-		if ($path == 'myntcd/top_all') {
-			$table = $rows['monthly'];
-		} else {
-			$table = $rows['total'];
-		}
-		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
-		$output .= '</div>';
-
-		if ($path == 'myntcd/top_all') {
-			$output .= '<div class = "myntcd_top_label">';
-			$output .= t('Yearly Top !num total byte', array('!num' => '20'));
-			$output .= ':</div>';
-
-			$output .= '<div class = "myntcd_top_table">';
-			$output .= theme('table', array('header' => $header, 'rows' => $rows['yearly'], 'empty' => t('No content available.')));
-			$output .= '</div>';
-		}
-	} else {
-		if ($path == 'myntcd/iprange') {
-			$output .= '<div class = "myntcd_top_table">';
-		}
-		$output .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No content available.')));
-		if ($path == 'myntcd/iprange') {
-			$output .= '</div>';
-		}
-	}
-
-	return $output;
-} // function theme_myntcd_when()
-
-
-/**
- * Navigacios linkeket allitja elo
- * @param ip ip cim
- * @param when (daily/weekly/monthly/yearly)
- * @param start forgalmi adatok kezdeti ideje
- * @param stop forgalmi adatok befejezesi ideje
- * @param path megadott utvonal reszlet, ami itt kiegeszul
- * @return a legeneralt linkek html kodjaval ter vissza
- */
-function _myntcd_navigation($ip, $when, $start, $stop, $path) {
-	$output = '';
-
-	switch ($when) {
-		case 'daily':
-			$minus_date = $start.' -1 day';
-			$plus_date = $start.' +1 day';
-			$show_next_date = $start;
-			$date_format = 'Y-m-d';
-			break;
-		case 'weekly':
-			$minus_date = $stop.' -7 day';
-			$plus_date = $stop.' +7 day';
-			$show_next_date = $stop;
-			$date_format = 'Y-m-d';
-			break;
-		case 'monthly':
-			$minus_date = $start.' -1 month';
-			$plus_date = $start.' +1 month';
-			$show_next_date = $stop;
-			$date_format = 'Y-m-01';
-			break;
-		case 'yearly':
-			$minus_date = $start.' -1 year';
-			$plus_date = $start.' +1 year';
-			$show_next_date = $stop;
-			$date_format = 'Y-01-01';
-			break;
-	}
-
-	$output .= '<div class="myntcd-navigation clear-block">';
-
-	$prev_date = date($date_format, strtotime($minus_date));
-	if ($ip != '') {
-		$full_path = $path.'/'.$ip.'/'.$when;
-	} else {
-		$full_path = $path.'/'.$when;
-	}
-	$output .= l(
-		t('previous'),
-		$full_path.'/'.$prev_date,
-		array('attributes' => array('class' => 'myntcd-previous'))
-	);
-
-	if ($show_next_date == date('Y-m-d')) {
-		$output .= '<span class="myntcd-next-grey">'.t('next').'</span>';
-	} else {
-		$next_date = date($date_format, strtotime($plus_date));
-		$output .= l(
-			t('next'),
-			$full_path.'/'.$next_date,
-			array('attributes' => array('class' => 'myntcd-next'))
-		);
-	}
-	$output .= '</div><br />';
-
-	return $output;
-} // function _myntcd_navigation()
-
-
-/**
- * A fejlecen megjeleno szoveget kesziti el
- * @param ip ip cim
- * @param start forgalmi adatok kezdeti ideje
- * @param stop forgalmi adatok befejezesi ideje
- * @return az oldalhoz megfelelo fejleccel ter vissza
- */
-function _myntcd_set_title($from, $ip, $start = '', $stop = '') {
-	if ($start != '') {
-		if ($stop != '') {
-			$date = $start.' - '.$stop;
-		} else {
-			$date = $start;
-		}
-	}
-	switch ($from) {
-		case 'myip':
-		case 'ip':
-			if ($start == '') {
-				return drupal_set_title(t('!title', array('!title' => $ip)));
-			} else {
-				return drupal_set_title(t('!title (!date)', array('!title' => $ip, '!date' => $date)));
-			}
-			break;
-		case 'iprange':
-			if ($ip == 'all') {
-				$ip = t('all');
-			}
-			return drupal_set_title(t('IP Range traffic: !ip (!date)', array('!ip' => $ip, '!date' => $date)));
-			break;
-		case 'top':
-			return drupal_set_title(t('!when Top !num (!date)', array('!when' => $ip, '!num' => '20', '!date' => $date)));
-			break;
-	}
-} // function _myntcd_set_title()
 
 
 /**
@@ -1237,7 +894,7 @@ function myntcd_top($when = '', $date = '') {
 
 		_myntcd_create_tmptable('top', $dates['start'], $dates['stop']);
 
-		$traffic = array('out_byte' => 'out', 'in_byte' => 'in', 'total' => 'total' );
+		$traffic = array('out_byte' => 'out', 'in_byte' => 'in', 'total' => 'total');
 		foreach ($traffic as $order_by => $table) {
 			switch ($when) {
 				case 'daily': // Napi forgalom
@@ -1299,6 +956,775 @@ function myntcd_top($when = '', $date = '') {
 	);
 	return $build;
 } // function myntcd_top()
+
+
+/**
+ * A feketelistan levo ip cimek megjelenitese
+ * @param form
+ * @param form_state
+ * @return form az oldal megjelenitesehez szukseges adatotkkal ter vissza
+ */
+function myntcd_filter_blacklist($form, &$form_state) {
+	// Kapcsolodas az SQL szerverhez
+	db_set_active('myntcd');
+
+	$SQL = "SELECT * FROM filter WHERE blacklist = 1 ORDER BY date DESC, ip";
+	$result = db_query($SQL);
+
+	// Vissza valtas az alapertelmezett SQL szerverhez
+	db_set_active();
+
+	$form['table']['#tree'] = TRUE;
+
+	while ($row = $result->fetchAssoc()) {
+		$form['table'][$row['ip']] = array(
+			'chk' => array(
+				'#type' => 'checkbox',
+			),
+			'ip_address' => array(
+				'#type' => 'link',
+				'#title' => $row['ip'],
+				'#href' => 'myntcd/ip/'.$row['ip'],
+			),
+			'end_date' => array(
+				'#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
+			),
+			'comment' => array(
+				'#type' => 'textfield',
+				'#default_value' => $row['comment'],
+			),
+		);
+	}
+
+  $form['white'] = array(
+		'#type' => 'submit',
+		'#value' => t('Add Whitelist'),
+	);
+
+	$form['save'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+	);
+
+	$form['remove'] = array(
+		'#type' => 'submit',
+		'#value' => t('Delete'),
+	);
+
+	return $form;
+} // function myntcd_filter_blacklist()
+
+
+/**
+ * A feketelistan elvegzett modositasokat dolgozza fel
+ * @param form
+ * @param form_state
+ */
+function myntcd_filter_blacklist_submit($form, &$form_state) {
+	foreach ($form_state['values']['table'] as $ip => $items) {
+		if ($items['chk']) {
+			if ( $form_state['values']['op'] == t('Save') ) {
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = 1";
+				db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+			} elseif ( $form_state['values']['op'] == t('Delete') ) {
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "DELETE FROM filter WHERE ip = :ip AND blacklist = 1";
+				db_query($SQL, array(':ip' => $ip));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+			} elseif ( $form_state['values']['op'] == t('Add Whitelist') ) {
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "UPDATE filter SET blacklist = 0 WHERE ip = :ip AND blacklist = 1";
+				db_query($SQL, array(':ip' => $ip));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+			}
+		}
+	}
+} // function myntcd_filter_blacklist_submit()
+
+
+/**
+ * A feherlistan levo ip cimek megjelenitese
+ * @param form
+ * @param form_state
+ * @return form az oldal megjelenitesehez szukseges adatotkkal ter vissza
+ */
+function myntcd_filter_whitelist($form, &$form_state) {
+	// Kapcsolodas az SQL szerverhez
+	db_set_active('myntcd');
+
+	$SQL = "SELECT * FROM filter WHERE blacklist = 0 ORDER BY date DESC, ip";
+	$result = db_query($SQL);
+
+	// Vissza valtas az alapertelmezett SQL szerverhez
+	db_set_active();
+
+	$form['table']['#tree'] = TRUE;
+	while ($row = $result->fetchAssoc()) {
+		$form['table'][$row['ip']] = array(
+			'chk' => array(
+				'#type' => 'checkbox',
+			),
+			'ip_address' => array(
+				'#type' => 'link',
+				'#title' => $row['ip'],
+				'#href' => 'myntcd/ip/'.$row['ip'],
+			),
+			'end_date' => array(
+				'#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
+			),
+			'comment' => array(
+				'#type' => 'textfield',
+				'#default_value' => $row['comment'],
+			),
+		);
+	}
+
+	$form['save'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+	);
+
+	$form['remove'] = array(
+		'#type' => 'submit',
+		'#value' => t('Delete'),
+	);
+
+	return $form;
+} // function myntcd_filter_whitelist()
+
+
+/**
+ * A feherlistan elvegzett modositasokat dolgozza fel
+ * @param form
+ * @param form_state
+ */
+function myntcd_filter_whitelist_submit($form, &$form_state) {
+	foreach ($form_state['values']['table'] as $ip => $items) {
+		if ($items['chk']) {
+			if ( $form_state['values']['op'] == t('Save') ) {
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = 0";
+				db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+			} elseif ( $form_state['values']['op'] == t('Delete') ) {
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "DELETE FROM filter WHERE ip =:ip AND blacklist = 0";
+				db_query($SQL, array(':ip' => $ip));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+			}
+		}
+	}
+} // function myntcd_filter_whitelist_submit()
+
+
+/**
+ * Fel lehet venni a feher es fekete listakra ip cimeket
+ * @param form
+ * @param form_state
+ * @return form az oldal megjelenitesehez szukseges adatotkkal ter vissza
+ */
+function myntcd_filter_add($form, &$form_state) {
+	$form['filter_ip'] = array(
+		'#type' => 'textfield',
+		'#title' => t('IP Address'),
+		'#size' => 20,
+		'#maxlength' => 39,
+		'#required' => TRUE,
+	);
+
+	$form['filter_type'] = array(
+		'#type' => 'select',
+		'#title' => t('Type'),
+		'#options' => array(1 => t('Blacklist'), 0 => t('Whitelist')),
+		'#required' => FALSE,
+	);
+
+	$form['filter_time'] = array(
+		'#type' => 'radios',
+		'#title' => t('Time interval'),
+		'#default_value' => '1',
+		'#options' => array(
+		    '1' => t('day'),
+		    '7' => t('week'),
+		    '30' => t('month'),
+		    '-1' => t('for ever')
+		),
+		'#required' => FALSE,
+	);
+
+	$form['filter_time_interval'] = array(
+		'#type' => 'textfield',
+		'#default_value' => '1',
+		'#size' => 20,
+		'#required' => TRUE,
+	);
+
+	$form['filter_comment'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Comment'),
+		'#size' => 20,
+	);
+
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save')
+	);
+
+	return $form;
+} // function myntcd_filter_add()
+
+
+/**
+ * A filter oldalon megadott adatokat validalja
+ * @param form
+ * @param form_state
+ */
+function myntcd_filter_add_validate($form, &$form_state) {
+	if (!_myntcd_is_ip($form_state['values']['filter_ip'])) {
+		form_set_error('filter_ip', t('Is not IP address.'));
+	}
+	if (!is_numeric($form_state['values']['filter_time_interval'])) {
+		form_set_error('filter_time_interval', t('Time interval is not numeric.'));
+	}
+} // function myntcd_filter_add_validate()
+
+
+/**
+ * Feldolgozza a valtozasokat
+ * @param form
+ * @param form_state
+ */
+function myntcd_filter_add_submit($form, &$form_state) {
+	// Kapcsolodas az SQL szerverhez
+	db_set_active('myntcd');
+
+	if ($form_state['values']['filter_time'] == '-1') {
+		$filtertime = '0000-00-00';
+	} else {
+		$filtertime = $form_state['values']['filter_time'] * $form_state['values']['filter_time_interval'];
+		$filtertime = date('Y-m-d', strtotime('+'.$filtertime.' day'));
+	}
+
+	$SQL = "INSERT INTO filter (ip, blacklist, date, comment) VALUES (:ip, :blacklist, :date, :comment)";
+	db_query($SQL, array(':ip' => $form_state['values']['filter_ip'], ':blacklist' => $form_state['values']['filter_type'], ':date' => $filtertime, ':comment' => $form_state['values']['filter_comment']));
+
+	// Vissza valtas az alapertelmezett SQL szerverhez
+	db_set_active();
+} // function myntcd_filter_add_submit()
+
+
+/**
+ * myntcd_img: rrd grafikont jelenit meg egy adott ip-hez
+ * @param ip ip cim
+ * @param when (daily/weekly/monthly/yearly)
+ * @param start forgalmi adatok kezdeti ideje
+ * @param stop forgalmi adatok befejezesi ideje
+ */
+function myntcd_img($ip, $when, $start = '', $stop = '') {
+	// Utolso idopont meghatarozasa
+	if ($stop == '') {
+		if ($when == 'daily') {
+			if ($start != '' && strtotime($start) < strtotime('now')) {
+				$stop = strtotime('+1 day', strtotime($start));
+			} else {
+				$stop = strtotime('now');
+			}
+		} else {
+			$stop = strtotime('now');
+		}
+	} else {
+		if ($when != 'yearly') {
+			$stop = strtotime($stop.' 23:59:59');
+		} else {
+			$stop = strtotime($stop);
+		}
+	}
+	if ($start != '') {
+		$start = strtotime($start);
+	}
+	// Kep tipusanak megfelelo kezdesi idopont meghatarozasa
+	switch ($when) {
+		default:
+		case 'daily':
+			if ($start == '') {
+				$start = strtotime('-1 day', $stop);
+				$title = $ip.' ('.date('Y-m-d', $stop).')';
+			} else {
+				$title = $ip.' ('.date('Y-m-d', $start).')';
+			}
+		break;
+		case 'weekly':
+			if ($start == '') {
+				$start = strtotime('-1 week +1 day', $stop);
+			}
+			$title = $ip.' ('.date('Y-m-d', $start).' - '.date('Y-m-d', $stop).')';
+		break;
+		case 'monthly':
+			if ($start == '') {
+				$start = strtotime('-1 month', $stop);
+			}
+			$title = $ip.' ('.date('Y-m-d', $start).' - '.date('Y-m-d', $stop).')';
+		break;
+		case 'yearly':
+			if ($start == '') {
+				$start = strtotime('-1 year', $stop);
+			}
+			$title = $ip.' ('.date('Y-m-d', $start).' - '.date('Y-m-d', $stop).')';
+		break;
+	}
+	// Kep elkeszitese
+	$img = _myntcd_get_rrd_image_myntcd($ip, $title, $start, $stop);
+} // function myntcd_img
+
+
+/* ========== Theme functions ========== */
+
+
+/**
+ * theme_myntcd_rrds: IP traffic RRDs
+ * @param variables a smikeleshez szukseges adatokat tartalmazza
+ * @return adott oldallal ter vissza
+ */
+function theme_myntcd_rrds($variables) {
+	$ip = $variables['ip'];
+	$path = $variables['path'];
+	$output = '';
+
+	$output .= '<div class="myntcd_rrd_img">';
+	$output .= l(
+		'<img src="'.url('myntcd/img/'.$ip.'/daily').'" alt="myntcd_daily_image" />',
+		$path.'/daily',
+		array('html' => TRUE)
+	);
+	$output .= '</div>';
+
+	$output .= '<div class="myntcd_rrd_img">';
+	$output .= l(
+		'<img src="'.url('myntcd/img/'.$ip.'/weekly').'" alt="myntcd_weekly_image" />',
+		$path.'/weekly',
+		array('html' => TRUE)
+	);
+	$output .= '</div>';
+
+	$output .= '<div class="myntcd_rrd_img">';
+	$output .= l(
+		'<img src="'.url('myntcd/img/'.$ip.'/monthly').'" alt="myntcd_monthly_image" />',
+		$path.'/monthly',
+		array('html' => TRUE)
+	);
+	$output .= '</div>';
+
+	$output .= '<div class="myntcd_rrd_img">';
+	$output .= l(
+		'<img src="'.url('myntcd/img/'.$ip.'/yearly').'" alt="myntcd_yearly_image" />',
+		$path.'/yearly',
+		array('html' => TRUE)
+	);
+	$output .= '</div>';
+
+	return $output;
+} // function theme_myntcd_rrds
+
+
+/**
+ * theme_myntcd_when: egyseges theme
+ * @param variables a smikeleshez szukseges adatokat tartalmazza
+ * @return adott oldallal ter vissza
+ */
+function theme_myntcd_tables($variables) {
+
+	$ip = $variables['ip'];
+	$when = $variables['when'];
+	$rows = $variables['rows'];
+	$start = $variables['start'];
+	$stop = $variables['stop'];
+	$path = $variables['path'];
+
+	$output = '';
+
+	if ($path == 'myntcd/ip' || $path == 'myntcd/iprange' || $path == 'myntcd/top') {
+		$output .= _myntcd_navigation($ip, $when, $start, $stop, $path);
+	}
+	if ($path == 'myntcd/ip' || $path == 'my_traffic') {
+		$output .= '<div class="myntcd_rrd_img">';
+		$output .= '<img src="'.url('myntcd/img/'.$ip.'/'.$when.'/'.$start.'/'.$stop).'" alt="myntcd_'.$when.'_image" />';
+		$output .= '</div>';
+	}
+
+	if ($path == 'myntcd/ip') {
+		$header = array(
+			array('data' => t('Time')),
+			array('data' => t('Type')),
+			array('data' => t('In Packet'), 'class' => 'myntcd_header_right'),
+			array('data' => t('Out Packet'), 'class' => 'myntcd_header_right'),
+			array('data' => t('Total Packet'), 'class' => 'myntcd_header_right'),
+			array('data' => t('In Byte'), 'class' => 'myntcd_header_right'),
+			array('data' => t('Out Byte'), 'class' => 'myntcd_header_right'),
+			array('data' => t('Total Byte'), 'class' => 'myntcd_header_right'),
+			array('data' => t('Out%'), 'class' => 'myntcd_header_right'),
+		);
+	} elseif ($path == 'myntcd/iprange_list') {
+		$header = array(
+			array('data' => t('IP Address')),
+			array('data' => t('Operations'), 'colspan' => '4'),
+		);
+	} else {
+		if ($path == 'my_traffic') {
+			$first_column = 'Time';
+		} else {
+			$first_column = 'IP Address';
+		}
+
+		$header = array(
+			array('data' => t($first_column)),
+			array('data' => t('In Byte'), 'class' => 'myntcd_header_right'),
+			array('data' => t('Out Byte'), 'class' => 'myntcd_header_right'),
+			array('data' => t('Total Byte'), 'class' => 'myntcd_header_right'),
+			array('data' => t('Out%'), 'class' => 'myntcd_header_right'),
+		);
+	}
+
+	if ($path == 'myntcd/top_all' || $path == 'myntcd/top') {
+		$output .= '<div class = "myntcd_top_label">';
+		if ($path == 'myntcd/top_all') {
+			$output .= t('Daily Top !num total byte', array('!num' => '20'));
+		} else {
+			$output .= t(' Top !num in byte', array('!num' => '20'));
+		}
+		$output .= ':</div>';
+
+		$output .= '<div class = "myntcd_top_table">';
+		if ($path == 'myntcd/top_all') {
+			$table = $rows['daily'];
+		} else {
+			$table = $rows['in'];
+		}
+		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
+		$output .= '</div>';
+
+		$output .= '<div class = "myntcd_top_label">';
+		if ($path == 'myntcd/top_all') {
+			$output .= t('Weekly Top !num total byte', array('!num' => '20'));
+		} else {
+			$output .= t(' Top !num out byte', array('!num' => '20'));
+		}
+		$output .= ':</div>';
+
+		$output .= '<div class = "myntcd_top_table">';
+		if ($path == 'myntcd/top_all') {
+			$table = $rows['weekly'];
+		} else {
+			$table = $rows['out'];
+		}
+		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
+		$output .= '</div>';
+
+		$output .= '<div class = "myntcd_top_label">';
+		if ($path == 'myntcd/top_all') {
+			$output .= t('Monthly Top !num total byte', array('!num' => '20'));
+		} else {
+			$output .= t(' Top !num total byte', array('!num' => '20'));
+		}
+		$output .= ':</div>';
+
+		$output .= '<div class = "myntcd_top_table">';
+		if ($path == 'myntcd/top_all') {
+			$table = $rows['monthly'];
+		} else {
+			$table = $rows['total'];
+		}
+		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
+		$output .= '</div>';
+
+		if ($path == 'myntcd/top_all') {
+			$output .= '<div class = "myntcd_top_label">';
+			$output .= t('Yearly Top !num total byte', array('!num' => '20'));
+			$output .= ':</div>';
+
+			$output .= '<div class = "myntcd_top_table">';
+			$output .= theme('table', array('header' => $header, 'rows' => $rows['yearly'], 'empty' => t('No content available.')));
+			$output .= '</div>';
+		}
+	} else {
+		if ($path == 'myntcd/iprange') {
+			$output .= '<div class = "myntcd_top_table">';
+		}
+		$output .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No content available.')));
+		if ($path == 'myntcd/iprange') {
+			$output .= '</div>';
+		}
+	}
+
+	return $output;
+} // function theme_myntcd_when()
+
+
+/**
+ * A feketelista megjelenitse
+ * @param variables a smikeleshez szukseges adatokat tartalmazza
+ * @return egy segedfugvenyt hiv meg
+ */
+function theme_myntcd_filter_blacklist($variables) {
+	return _myntcd_filter_tables($variables);
+} // function theme_myntcd_filter_blacklist()
+
+
+/**
+ * A feherlista megjelenitse
+ * @param variables a smikeleshez szukseges adatokat tartalmazza
+ * @return egy segedfugvenyt hiv meg
+ */
+function theme_myntcd_filter_whitelist($variables) {
+	return _myntcd_filter_tables($variables);
+} // function theme_myntcd_filter_whitelist()
+
+
+/* ========== Own functions ========== */
+
+
+/**
+ * Ellenorzi az ip formatumot
+ * @param ip text
+ * @return boolean
+ */
+function _myntcd_is_ip($ip) {
+	$num = "(25[0-5]|2[0-4]\d|[01]?\d\d|\d)";
+	//$num = "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
+
+	$ipv4regexp = "/^$num\.$num\.$num\.$num$/";
+
+	$ipv6regexp = "/^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|";
+	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|";
+	$ipv6regexp .= "((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|";
+	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|";
+	$ipv6regexp .= ":((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|";
+	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|";
+	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|";
+	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|";
+	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|";
+	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|";
+	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|";
+	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|";
+	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|";
+	$ipv6regexp .= "(:(((:[0-9A-Fa-f]{1,4}){1,7})|";
+	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/";
+
+	if (preg_match($ipv4regexp, $ip)) {
+		return 1;
+	} elseif (preg_match($ipv6regexp, $ip)) {
+		return 1;
+	} else {
+		return 0;
+	}
+} // function _myntcd_is_ip()
+
+
+/**
+ * Adott idointervallumnak megfelelo datumokkal ter vissza
+ * @param when (daily/weekly/monthly/yearly)
+ * @param date monthly eseten kapott datum
+ * @return dates
+ */
+function _myntcd_getback_dates($when, $date, $path) {
+	if ($date == '') {
+		switch ($when) {
+			case '':
+			case 'daily':
+			case 'weekly':
+				$date = date('Y-m-d');
+				break;
+			case 'monthly':
+				$date = date('Y-m-01');
+				break;
+			case 'yearly':
+				$date = date('Y-01-01');
+				break;
+		}
+	} elseif (!_myntcd_chk_date($date)) {
+		drupal_goto($path.'/'.$when);
+	}
+
+	switch ($when) {
+		case '':
+			$dates['date'] = $date;
+			$dates['start'] = '';
+			$dates['stop'] = '';
+			break;
+		case 'daily':
+			$dates['date'] = $date;
+			$dates['start'] = $date;
+			$dates['stop'] = '';
+			break;
+		case 'weekly':
+			$dates['start'] = date('Y-m-d', strtotime($date.' -1 week +1 day'));
+			$dates['stop'] = $date;
+			break;
+		case 'monthly':
+			$dates['start'] = $date;
+
+			if (strtotime('now') < strtotime($date.' +1 month')) {
+				$dates['stop'] = date('Y-m-d');
+			} else {
+				$dates['stop'] = date('Y-m-d', strtotime($date.' +1 month -1 day'));
+			}
+			break;
+		case 'yearly':
+			if (strtotime(date('Y')) > strtotime(date('Y', strtotime($date)))) {
+				$dates['start'] = date('Y', strtotime($date)).'-01-01';
+				$dates['stop'] = date('Y', strtotime($date)).'-12-31';
+			} else {
+				$dates['start'] = $date;
+				$dates['stop'] = date('Y-m-d');
+			}
+			break;
+	}
+
+	return $dates;
+} // function _myntcd_getback_dates()
+
+
+/**
+ * A fejlecen megjeleno szoveget kesziti el
+ * @param ip ip cim
+ * @param start forgalmi adatok kezdeti ideje
+ * @param stop forgalmi adatok befejezesi ideje
+ * @return az oldalhoz megfelelo fejleccel ter vissza
+ */
+function _myntcd_set_title($from, $ip, $start = '', $stop = '') {
+	if ($start != '') {
+		if ($stop != '') {
+			$date = $start.' - '.$stop;
+		} else {
+			$date = $start;
+		}
+	}
+	switch ($from) {
+		case 'myip':
+		case 'ip':
+			if ($start == '') {
+				return drupal_set_title(t('!title', array('!title' => $ip)));
+			} else {
+				return drupal_set_title(t('!title (!date)', array('!title' => $ip, '!date' => $date)));
+			}
+			break;
+		case 'iprange':
+			if ($ip == 'all') {
+				$ip = t('all');
+			}
+			return drupal_set_title(t('IP Range traffic: !ip (!date)', array('!ip' => $ip, '!date' => $date)));
+			break;
+		case 'top':
+			return drupal_set_title(t('!when Top !num (!date)', array('!when' => $ip, '!num' => '20', '!date' => $date)));
+			break;
+	}
+} // function _myntcd_set_title()
+
+
+/**
+ * Forgalmi adatok tablazatta alakitasa
+ * @param from melyik fuggveny hivta meg
+ * @param start forgalmi adatok osszegyujtesenek kezdeti ideje
+ * @param stop forgalmi adatok osszegyujtesenek befejezesi ideje
+ * @param ip ip cim
+ */
+function _myntcd_create_tmptable($from, $start, $stop = '', $ip = '') {
+	if ($stop == '') {
+		$stop = date('Y-m-d');
+	}
+
+	// Kapcsolodas az SQL szerverhez
+	db_set_active('myntcd');
+
+	$SQL = "CREATE TEMPORARY TABLE tmp_table ";
+	$SQL .= "( `ip` varchar(39) default NULL, ";
+
+	$SQL2 = "INSERT INTO tmp_table SELECT ip, ";
+
+	if ($from == 'myip' || $from == 'ip' || $from == 'top') {
+		$SQL .= "`date` DATE, ";
+
+		$SQL2 .= "DATE(date), ";
+	}
+	if ($from == 'ip') {
+		$SQL .= "`type` int(3) NOT NULL default '0', ";
+		$SQL .= " `in_packet` bigint(20) unsigned NOT NULL default '0', ";
+		$SQL .= " `out_packet` bigint(20) unsigned NOT NULL default '0', ";
+
+		$SQL2 .= "type, SUM(in_packet), SUM(out_packet), ";
+	} elseif ($from == 'iprange') {
+		$SQL .= "`ipr_id` smallint(5) unsigned NOT NULL, ";
+
+		$SQL2 .= "ipr_id, ";
+	}
+	$SQL2 .= "SUM(in_byte), SUM(out_byte) ";
+
+	$SQL .= " `in_byte` bigint(20) unsigned NOT NULL default '0', ";
+	$SQL .= " `out_byte` bigint(20) unsigned NOT NULL default '0')";
+
+	$SQL3 = $SQL2;
+	$SQL2 .= "FROM now WHERE ";
+	$SQL3 .= "FROM daily WHERE ";
+	$TMPSQL = "";
+	if ($from == 'myip' || $from == 'ip') {
+		$TMPSQL = "ip = :ip AND ";
+
+		$args2 = array(':ip' => $ip, ':stop' => $stop);
+		$args3 = array(':ip' => $ip, ':start' => $start, ':stop' => $stop);
+	} else {
+		$args2 = array(':stop' => $stop);
+		$args3 = array(':start' => $start, ':stop' => $stop);
+	}
+	$SQL2 .= $TMPSQL;
+	$SQL2 .= "DATE(date) = :stop GROUP BY ";
+	$SQL3 .= $TMPSQL;
+	$SQL3 .= "DATE(date) >= :start AND DATE(date) <= :stop GROUP BY ";
+	$TMPSQL = "";
+	if ($from == 'myip') {
+		$TMPSQL .= "DATE(date)";
+	} else {
+		$TMPSQL .= "ip";
+		if ($from == 'ip'){
+			$TMPSQL .= ", type";
+		}
+	}
+	$SQL2 .= $TMPSQL;
+	if ($from == 'ip' || $from == 'top') {
+		$SQL3 .= $TMPSQL.", date";
+	} else {
+		$SQL3 .= $TMPSQL;
+	}
+
+	$result = db_query($SQL);
+
+	$result = db_query($SQL2, $args2);
+
+	$result = db_query($SQL3, $args3);
+
+	// Vissza valtas az alapertelmezett SQL szerverhez
+	db_set_active();
+} // function _myntcd_create_tmptable()
 
 
 /**
@@ -1559,158 +1985,6 @@ function _myntcd_process_tabledatas($variables) {
 
 
 /**
- * Forgalmi adatok tablazatta alakitasa
- * @param from melyik fuggveny hivta meg
- * @param start forgalmi adatok osszegyujtesenek kezdeti ideje
- * @param stop forgalmi adatok osszegyujtesenek befejezesi ideje
- * @param ip ip cim
- */
-function _myntcd_create_tmptable($from, $start, $stop = '', $ip = '') {
-	if ($stop == '') {
-		$stop = date('Y-m-d');
-	}
-
-	// Kapcsolodas az SQL szerverhez
-	db_set_active('myntcd');
-
-	$SQL = "CREATE TEMPORARY TABLE tmp_table ";
-	$SQL .= "( `ip` varchar(39) default NULL, ";
-
-	$SQL2 = "INSERT INTO tmp_table SELECT ip, ";
-
-	if ($from == 'myip' || $from == 'ip' || $from == 'top') {
-		$SQL .= "`date` DATE, ";
-
-		$SQL2 .= "DATE(date), ";
-	}
-	if ($from == 'ip') {
-		$SQL .= "`type` int(3) NOT NULL default '0', ";
-		$SQL .= " `in_packet` bigint(20) unsigned NOT NULL default '0', ";
-		$SQL .= " `out_packet` bigint(20) unsigned NOT NULL default '0', ";
-
-		$SQL2 .= "type, SUM(in_packet), SUM(out_packet), ";
-	} elseif ($from == 'iprange') {
-		$SQL .= "`ipr_id` smallint(5) unsigned NOT NULL, ";
-
-		$SQL2 .= "ipr_id, ";
-	}
-	$SQL2 .= "SUM(in_byte), SUM(out_byte) ";
-
-	$SQL .= " `in_byte` bigint(20) unsigned NOT NULL default '0', ";
-	$SQL .= " `out_byte` bigint(20) unsigned NOT NULL default '0')";
-
-	$SQL3 = $SQL2;
-	$SQL2 .= "FROM now WHERE ";
-	$SQL3 .= "FROM daily WHERE ";
-	$TMPSQL = "";
-	if ($from == 'myip' || $from == 'ip') {
-		$TMPSQL = "ip = :ip AND ";
-
-		$args2 = array(':ip' => $ip, ':stop' => $stop);
-		$args3 = array(':ip' => $ip, ':start' => $start, ':stop' => $stop);
-	} else {
-		$args2 = array(':stop' => $stop);
-		$args3 = array(':start' => $start, ':stop' => $stop);
-	}
-	$SQL2 .= $TMPSQL;
-	$SQL2 .= "DATE(date) = :stop GROUP BY ";
-	$SQL3 .= $TMPSQL;
-	$SQL3 .= "DATE(date) >= :start AND DATE(date) <= :stop GROUP BY ";
-	$TMPSQL = "";
-	if ($from == 'myip') {
-		$TMPSQL .= "DATE(date)";
-	} else {
-		$TMPSQL .= "ip";
-		if ($from == 'ip'){
-			$TMPSQL .= ", type";
-		}
-	}
-	$SQL2 .= $TMPSQL;
-	if ($from == 'ip' || $from == 'top') {
-		$SQL3 .= $TMPSQL.", date";
-	} else {
-		$SQL3 .= $TMPSQL;
-	}
-
-	$result = db_query($SQL);
-
-	$result = db_query($SQL2, $args2);
-
-	$result = db_query($SQL3, $args3);
-
-	// Vissza valtas az alapertelmezett SQL szerverhez
-	db_set_active();
-} // function _myntcd_create_tmptable()
-
-
-/**
- * A feketelistan levo ip cimek megjelenitese
- * @param form
- * @param form_state
- * @return form az oldal megjelenitesehez szukseges adatotkkal ter vissza
- */
-function myntcd_filter_blacklist($form, &$form_state) {
-	// Kapcsolodas az SQL szerverhez
-	db_set_active('myntcd');
-
-	$SQL = "SELECT * FROM filter WHERE blacklist = 1 ORDER BY date DESC, ip";
-	$result = db_query($SQL);
-
-	// Vissza valtas az alapertelmezett SQL szerverhez
-	db_set_active();
-
-	$form['table']['#tree'] = TRUE;
-
-	while ($row = $result->fetchAssoc()) {
-		$form['table'][$row['ip']] = array(
-			'chk' => array(
-				'#type' => 'checkbox',
-			),
-			'ip_address' => array(
-				'#type' => 'link',
-				'#title' => $row['ip'],
-				'#href' => 'myntcd/ip/'.$row['ip'],
-			),
-			'end_date' => array(
-				'#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
-			),
-			'comment' => array(
-				'#type' => 'textfield',
-				'#default_value' => $row['comment'],
-			),
-		);
-	}
-
-  $form['white'] = array(
-		'#type' => 'submit',
-		'#value' => t('Add Whitelist'),
-	);
-
-	$form['save'] = array(
-		'#type' => 'submit',
-		'#value' => t('Save'),
-	);
-
-	$form['remove'] = array(
-		'#type' => 'submit',
-		'#value' => t('Delete'),
-	);
-
-	return $form;
-} // function myntcd_filter_blacklist()
-
-
-/**
- * A feketelista megjelenitse
- * @param variables a smikeleshez szukseges adatokat tartalmazza
- * @return egy segedfugvenyt hiv meg
- */
-function theme_myntcd_filter_blacklist($variables) {
-	return _myntcd_filter_tables($variables);
-} // function theme_myntcd_filter_blacklist()
-
-
-/**
  * A felekete és feher listat kesziti el
  * @param variables a smikeleshez szukseges adatokat tartalmazza
  * @return adott oldallal ter vissza
@@ -1745,236 +2019,6 @@ function _myntcd_filter_tables($variables) {
 
 	return $output;
 } // function _myntcd_filter_tables()
-
-
-/**
- * A feketelistan elvegzett modositasokat dolgozza fel
- * @param form
- * @param form_state
- */
-function myntcd_filter_blacklist_submit($form, &$form_state) {
-	foreach ($form_state['values']['table'] as $ip => $items) {
-		if ($items['chk']) {
-			if ( $form_state['values']['op'] == t('Save') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = 1";
-				db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			} elseif ( $form_state['values']['op'] == t('Delete') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "DELETE FROM filter WHERE ip = :ip AND blacklist = 1";
-				db_query($SQL, array(':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			} elseif ( $form_state['values']['op'] == t('Add Whitelist') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "UPDATE filter SET blacklist = 0 WHERE ip = :ip AND blacklist = 1";
-				db_query($SQL, array(':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			}
-		}
-	}
-} // function myntcd_filter_blacklist_submit()
-
-
-/**
- * A feherlistan levo ip cimek megjelenitese
- * @param form
- * @param form_state
- * @return form az oldal megjelenitesehez szukseges adatotkkal ter vissza
- */
-function myntcd_filter_whitelist($form, &$form_state) {
-	// Kapcsolodas az SQL szerverhez
-	db_set_active('myntcd');
-
-	$SQL = "SELECT * FROM filter WHERE blacklist = 0 ORDER BY date DESC, ip";
-	$result = db_query($SQL);
-
-	// Vissza valtas az alapertelmezett SQL szerverhez
-	db_set_active();
-
-	$form['table']['#tree'] = TRUE;
-	while ($row = $result->fetchAssoc()) {
-		$form['table'][$row['ip']] = array(
-			'chk' => array(
-				'#type' => 'checkbox',
-			),
-			'ip_address' => array(
-				'#type' => 'link',
-				'#title' => $row['ip'],
-				'#href' => 'myntcd/ip/'.$row['ip'],
-			),
-			'end_date' => array(
-				'#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
-			),
-			'comment' => array(
-				'#type' => 'textfield',
-				'#default_value' => $row['comment'],
-			),
-		);
-	}
-
-	$form['save'] = array(
-		'#type' => 'submit',
-		'#value' => t('Save'),
-	);
-
-	$form['remove'] = array(
-		'#type' => 'submit',
-		'#value' => t('Delete'),
-	);
-
-	return $form;
-} // function myntcd_filter_whitelist()
-
-
-/**
- * A feherlista megjelenitse
- * @param variables a smikeleshez szukseges adatokat tartalmazza
- * @return egy segedfugvenyt hiv meg
- */
-function theme_myntcd_filter_whitelist($variables) {
-	return _myntcd_filter_tables($variables);
-} // function theme_myntcd_filter_whitelist()
-
-
-/**
- * A feherlistan elvegzett modositasokat dolgozza fel
- * @param form
- * @param form_state
- */
-function myntcd_filter_whitelist_submit($form, &$form_state) {
-	foreach ($form_state['values']['table'] as $ip => $items) {
-		if ($items['chk']) {
-			if ( $form_state['values']['op'] == t('Save') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = 0";
-				db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			} elseif ( $form_state['values']['op'] == t('Delete') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "DELETE FROM filter WHERE ip =:ip AND blacklist = 0";
-				db_query($SQL, array(':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			}
-		}
-	}
-} // function myntcd_filter_whitelist_submit()
-
-
-/**
- * Fel lehet venni a feher es fekete listakra ip cimeket
- * @param form
- * @param form_state
- * @return form az oldal megjelenitesehez szukseges adatotkkal ter vissza
- */
-function myntcd_filter_add($form, &$form_state) {
-	$form['filter_ip'] = array(
-		'#type' => 'textfield',
-		'#title' => t('IP Address'),
-		'#size' => 20,
-		'#maxlength' => 39,
-		'#required' => TRUE,
-	);
-
-	$form['filter_type'] = array(
-		'#type' => 'select',
-		'#title' => t('Type'),
-		'#options' => array(1 => t('Blacklist'), 0 => t('Whitelist')),
-		'#required' => FALSE,
-	);
-
-	$form['filter_time'] = array(
-		'#type' => 'radios',
-		'#title' => t('Time interval'),
-		'#default_value' => '1',
-		'#options' => array(
-		    '1' => t('day'),
-		    '7' => t('week'),
-		    '30' => t('month'),
-		    '-1' => t('for ever')
-		),
-		'#required' => FALSE,
-	);
-
-	$form['filter_time_interval'] = array(
-		'#type' => 'textfield',
-		'#default_value' => '1',
-		'#size' => 20,
-		'#required' => TRUE,
-	);
-
-	$form['filter_comment'] = array(
-		'#type' => 'textfield',
-		'#title' => t('Comment'),
-		'#size' => 20,
-	);
-
-	$form['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Save')
-	);
-
-	return $form;
-} // function myntcd_filter_add()
-
-
-/**
- * A filter oldalon megadott adatokat validalja
- * @param form
- * @param form_state
- */
-function myntcd_filter_add_validate($form, &$form_state) {
-	if (!_myntcd_is_ip($form_state['values']['filter_ip'])) {
-		form_set_error('filter_ip', t('Is not IP address.'));
-	}
-	if (!is_numeric($form_state['values']['filter_time_interval'])) {
-		form_set_error('filter_time_interval', t('Time interval is not numeric.'));
-	}
-} // function myntcd_filter_add_validate()
-
-
-/**
- * Feldolgozza a valtozasokat
- * @param form
- * @param form_state
- */
-function myntcd_filter_add_submit($form, &$form_state) {
-	// Kapcsolodas az SQL szerverhez
-	db_set_active('myntcd');
-
-	if ($form_state['values']['filter_time'] == '-1') {
-		$filtertime = '0000-00-00';
-	} else {
-		$filtertime = $form_state['values']['filter_time'] * $form_state['values']['filter_time_interval'];
-		$filtertime = date('Y-m-d', strtotime('+'.$filtertime.' day'));
-	}
-
-	$SQL = "INSERT INTO filter (ip, blacklist, date, comment) VALUES (:ip, :blacklist, :date, :comment)";
-	db_query($SQL, array(':ip' => $form_state['values']['filter_ip'], ':blacklist' => $form_state['values']['filter_type'], ':date' => $filtertime, ':comment' => $form_state['values']['filter_comment']));
-
-	// Vissza valtas az alapertelmezett SQL szerverhez
-	db_set_active();
-} // function myntcd_filter_add_submit()
 
 
 /**
@@ -2015,67 +2059,86 @@ function _myntcd_get_rrd_image_myntcd($ip, $title, $start, $end) {
 
 
 /**
- * myntcd_img: rrd grafikont jelenit meg egy adott ip-hez
+ * Navigacios linkeket allitja elo
  * @param ip ip cim
  * @param when (daily/weekly/monthly/yearly)
  * @param start forgalmi adatok kezdeti ideje
  * @param stop forgalmi adatok befejezesi ideje
+ * @param path megadott utvonal reszlet, ami itt kiegeszul
+ * @return a legeneralt linkek html kodjaval ter vissza
  */
-function myntcd_img($ip, $when, $start = '', $stop = '') {
-	// Utolso idopont meghatarozasa
-	if ($stop == '') {
-		if ($when == 'daily') {
-			if ($start != '' && strtotime($start) < strtotime('now')) {
-				$stop = strtotime('+1 day', strtotime($start));
-			} else {
-				$stop = strtotime('now');
-			}
-		} else {
-			$stop = strtotime('now');
-		}
-	} else {
-		if ($when != 'yearly') {
-			$stop = strtotime($stop.' 23:59:59');
-		} else {
-			$stop = strtotime($stop);
-		}
-	}
-	if ($start != '') {
-		$start = strtotime($start);
-	}
-	// Kep tipusanak megfelelo kezdesi idopont meghatarozasa
+function _myntcd_navigation($ip, $when, $start, $stop, $path) {
+	$output = '';
+
 	switch ($when) {
-		default:
 		case 'daily':
-			if ($start == '') {
-				$start = strtotime('-1 day', $stop);
-				$title = $ip.' ('.date('Y-m-d', $stop).')';
-			} else {
-				$title = $ip.' ('.date('Y-m-d', $start).')';
-			}
-		break;
+			$minus_date = $start.' -1 day';
+			$plus_date = $start.' +1 day';
+			$show_next_date = $start;
+			$date_format = 'Y-m-d';
+			break;
 		case 'weekly':
-			if ($start == '') {
-				$start = strtotime('-1 week +1 day', $stop);
-			}
-			$title = $ip.' ('.date('Y-m-d', $start).' - '.date('Y-m-d', $stop).')';
-		break;
+			$minus_date = $stop.' -7 day';
+			$plus_date = $stop.' +7 day';
+			$show_next_date = $stop;
+			$date_format = 'Y-m-d';
+			break;
 		case 'monthly':
-			if ($start == '') {
-				$start = strtotime('-1 month', $stop);
-			}
-			$title = $ip.' ('.date('Y-m-d', $start).' - '.date('Y-m-d', $stop).')';
-		break;
+			$minus_date = $start.' -1 month';
+			$plus_date = $start.' +1 month';
+			$show_next_date = $stop;
+			$date_format = 'Y-m-01';
+			break;
 		case 'yearly':
-			if ($start == '') {
-				$start = strtotime('-1 year', $stop);
-			}
-			$title = $ip.' ('.date('Y-m-d', $start).' - '.date('Y-m-d', $stop).')';
-		break;
+			$minus_date = $start.' -1 year';
+			$plus_date = $start.' +1 year';
+			$show_next_date = $stop;
+			$date_format = 'Y-01-01';
+			break;
 	}
-	// Kep elkeszitese
-	$img = _myntcd_get_rrd_image_myntcd($ip, $title, $start, $stop);
-} // function myntcd_img
+
+	$output .= '<div class="myntcd-navigation clear-block">';
+
+	$prev_date = date($date_format, strtotime($minus_date));
+	if ($ip != '') {
+		$full_path = $path.'/'.$ip.'/'.$when;
+	} else {
+		$full_path = $path.'/'.$when;
+	}
+	$output .= l(
+		t('previous'),
+		$full_path.'/'.$prev_date,
+		array('attributes' => array('class' => 'myntcd-previous'))
+	);
+
+	if ($show_next_date == date('Y-m-d')) {
+		$output .= '<span class="myntcd-next-grey">'.t('next').'</span>';
+	} else {
+		$next_date = date($date_format, strtotime($plus_date));
+		$output .= l(
+			t('next'),
+			$full_path.'/'.$next_date,
+			array('attributes' => array('class' => 'myntcd-next'))
+		);
+	}
+	$output .= '</div><br />';
+
+	return $output;
+} // function _myntcd_navigation()
+
+
+/**
+ * Ellenorzi a datum formatumot
+ * @param date text
+ * @return boolean
+ */
+function _myntcd_chk_date($date) {
+	if (preg_match("/^([123456789][[:digit:]]{3})-(0[1-9]|1[012])-(0[1-9]|[12][[:digit:]]|3[01])$/", $date)) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+} // function _myntcd_chk_date()
 
 
 /**
@@ -2108,57 +2171,6 @@ function _myntcd_get_packet_type($type) {
 	}
 	return $type;
 } // function _myntcd_get_packet_type()
-
-
-/**
- * Ellenorzi a datum formatumot
- * @param date text
- * @return boolean
- */
-function _myntcd_chk_date($date) {
-	if (preg_match("/^([123456789][[:digit:]]{3})-(0[1-9]|1[012])-(0[1-9]|[12][[:digit:]]|3[01])$/", $date)) {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
-} // function _myntcd_chk_date()
-
-
-/**
- * Ellenorzi az ip formatumot
- * @param ip text
- * @return boolean
- */
-function _myntcd_is_ip($ip) {
-	$num = "(25[0-5]|2[0-4]\d|[01]?\d\d|\d)";
-	//$num = "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
-
-	$ipv4regexp = "/^$num\.$num\.$num\.$num$/";
-
-	$ipv6regexp = "/^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|";
-	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|";
-	$ipv6regexp .= "((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|";
-	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|";
-	$ipv6regexp .= ":((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|";
-	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|";
-	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|";
-	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|";
-	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|";
-	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|";
-	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|";
-	$ipv6regexp .= "(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|";
-	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|";
-	$ipv6regexp .= "(:(((:[0-9A-Fa-f]{1,4}){1,7})|";
-	$ipv6regexp .= "((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/";
-
-	if (preg_match($ipv4regexp, $ip)) {
-		return 1;
-	} elseif (preg_match($ipv6regexp, $ip)) {
-		return 1;
-	} else {
-		return 0;
-	}
-} // function _myntcd_is_ip()
 
 
 /**
