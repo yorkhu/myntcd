@@ -668,7 +668,7 @@ function myntcd_ip($ip, $when = '', $date = '') {
 		);
 		$rows = _myntcd_process_tabledatas($process_vars);
 
-		$build['myntcd_my_traffic'] = array(
+		$build['myntcd_ip'] = array(
 		  '#theme' => 'myntcd_tables',
 		  '#when' => $when,
 		  '#rows' => $rows,
@@ -945,7 +945,7 @@ function myntcd_top($when = '', $date = '') {
 		$path = 'myntcd/top';
 	}
 
-	$build['myntcd_my_traffic'] = array(
+	$build['myntcd_top'] = array(
 	  '#theme' => 'myntcd_tables',
 	  '#when' => $when,
 	  '#rows' => $tables,
