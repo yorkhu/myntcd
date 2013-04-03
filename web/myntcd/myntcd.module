@@ -543,7 +543,7 @@ function myntcd_search_form($form, &$form_state) {
  */
 function myntcd_search_form_validate($form, &$form_state) {
 	if (!_myntcd_is_ip($form_state['values']['ip'])) {
-		form_set_error('ip', t('Is not IP address.'));
+		form_set_error('ip', t('Invalid IP address.'));
 	}
 } // myntcd_search_validate()
 
@@ -1203,7 +1203,7 @@ function myntcd_filter_add($form, &$form_state) {
  */
 function myntcd_filter_add_validate($form, &$form_state) {
 	if (!_myntcd_is_ip($form_state['values']['filter_ip'])) {
-		form_set_error('filter_ip', t('Is not IP address.'));
+		form_set_error('filter_ip', t('Invalid IP address.'));
 	}
 	if (!is_numeric($form_state['values']['filter_time_interval'])) {
 		form_set_error('filter_time_interval', t('Time interval is not numeric.'));
@@ -1385,65 +1385,26 @@ function theme_myntcd_tables($variables) {
 		);
 	}
 
-	if ($path == 'myntcd/top_all' || $path == 'myntcd/top') {
-		$output .= '<div class = "myntcd_top_label">';
-		if ($path == 'myntcd/top_all') {
-			$output .= t('Daily Top !num total byte', array('!num' => '20'));
-		} else {
-			$output .= t(' Top !num in byte', array('!num' => '20'));
-		}
-		$output .= ':</div>';
-
-		$output .= '<div class = "myntcd_top_table">';
-		if ($path == 'myntcd/top_all') {
-			$table = $rows['daily'];
-		} else {
-			$table = $rows['in'];
-		}
-		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
-		$output .= '</div>';
-
-		$output .= '<div class = "myntcd_top_label">';
-		if ($path == 'myntcd/top_all') {
-			$output .= t('Weekly Top !num total byte', array('!num' => '20'));
-		} else {
-			$output .= t(' Top !num out byte', array('!num' => '20'));
-		}
-		$output .= ':</div>';
-
-		$output .= '<div class = "myntcd_top_table">';
-		if ($path == 'myntcd/top_all') {
-			$table = $rows['weekly'];
-		} else {
-			$table = $rows['out'];
-		}
-		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
-		$output .= '</div>';
-
-		$output .= '<div class = "myntcd_top_label">';
-		if ($path == 'myntcd/top_all') {
-			$output .= t('Monthly Top !num total byte', array('!num' => '20'));
-		} else {
-			$output .= t(' Top !num total byte', array('!num' => '20'));
-		}
-		$output .= ':</div>';
-
-		$output .= '<div class = "myntcd_top_table">';
-		if ($path == 'myntcd/top_all') {
-			$table = $rows['monthly'];
-		} else {
-			$table = $rows['total'];
-		}
-		$output .= theme('table', array('header' => $header, 'rows' => $table, 'empty' => t('No content available.')));
-		$output .= '</div>';
-
-		if ($path == 'myntcd/top_all') {
+	if ($path == 'myntcd/top_all') {
+		$array_when = array('daily', 'weekly', 'monthly', 'yearly');
+		foreach ($array_when as $when) {
 			$output .= '<div class = "myntcd_top_label">';
-			$output .= t('Yearly Top !num total byte', array('!num' => '20'));
+			$output .= t('!when Top !num total byte', array('!when' => t(ucfirst($when)), '!num' => '20'));
 			$output .= ':</div>';
 
 			$output .= '<div class = "myntcd_top_table">';
-			$output .= theme('table', array('header' => $header, 'rows' => $rows['yearly'], 'empty' => t('No content available.')));
+			$output .= theme('table', array('header' => $header, 'rows' => $rows[$when], 'empty' => t('No content available.')));
+			$output .= '</div>';
+		}
+	} elseif ($path == 'myntcd/top') {
+		$traffic = array('in', 'out', 'total');
+		foreach ($traffic as $table) {
+			$output .= '<div class = "myntcd_top_label">';
+			$output .= t(' Top !num !table byte', array('!num' => '20', '!table' => t($table)));
+			$output .= ':</div>';
+
+			$output .= '<div class = "myntcd_top_table">';
+			$output .= theme('table', array('header' => $header, 'rows' => $rows[$table], 'empty' => t('No content available.')));
 			$output .= '</div>';
 		}
 	} else {
