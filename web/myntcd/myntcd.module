@@ -1312,37 +1312,16 @@ function theme_myntcd_rrds($variables) {
 	$path = $variables['path'];
 	$output = '';
 
-	$output .= '<div class="myntcd_rrd_img">';
-	$output .= l(
-		'<img src="'.url('myntcd/img/'.$ip.'/daily').'" alt="myntcd_daily_image" />',
-		$path.'/daily',
-		array('html' => TRUE)
-	);
-	$output .= '</div>';
-
-	$output .= '<div class="myntcd_rrd_img">';
-	$output .= l(
-		'<img src="'.url('myntcd/img/'.$ip.'/weekly').'" alt="myntcd_weekly_image" />',
-		$path.'/weekly',
-		array('html' => TRUE)
-	);
-	$output .= '</div>';
-
-	$output .= '<div class="myntcd_rrd_img">';
-	$output .= l(
-		'<img src="'.url('myntcd/img/'.$ip.'/monthly').'" alt="myntcd_monthly_image" />',
-		$path.'/monthly',
-		array('html' => TRUE)
-	);
-	$output .= '</div>';
-
-	$output .= '<div class="myntcd_rrd_img">';
-	$output .= l(
-		'<img src="'.url('myntcd/img/'.$ip.'/yearly').'" alt="myntcd_yearly_image" />',
-		$path.'/yearly',
-		array('html' => TRUE)
-	);
-	$output .= '</div>';
+	$array_when = array('daily', 'weekly', 'monthly', 'yearly');
+	foreach ($array_when as $when) {
+		$output .= '<div class="myntcd_rrd_img">';
+		$output .= l(
+			'<img src="'.url('myntcd/img/'.$ip.'/'.$when).'" alt="myntcd_'.$when.'_image" />',
+			$path.'/'.$when,
+			array('html' => TRUE)
+		);
+		$output .= '</div>';
+	}
 
 	return $output;
 } // function theme_myntcd_rrds
