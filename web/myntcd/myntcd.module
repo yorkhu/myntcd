@@ -635,10 +635,10 @@ function myntcd_ip($ip, $when = '', $date = '') {
 			case 'daily': // Napi forgalom
 				// utolso nap masik tablaba van
 				if ($dates['date'] == date('Y-m-d')) {
-					$from = "FROM now";
+					$from = "now";
 					$only_total = FALSE;
 				} else {
-					$from = "FROM daily";
+					$from = "daily";
 					// Ha nem aktualis nap van egyszerubb tablazat kell
 					$only_total = TRUE;
 				}
@@ -646,10 +646,24 @@ function myntcd_ip($ip, $when = '', $date = '') {
 				db_set_active('myntcd');
 
 				// A mai nap forgalmi adatai orankenti bontasban
-				$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-				$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte ".$from." ";
-				$SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date), type ORDER BY date DESC";
-				$result = db_query($SQL, array(':ip' => $ip, ':date' => $dates['date']));
+				// $SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
+				// $SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM ".$from." ";
+				// $SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date), type ORDER BY date DESC";
+				// $result = db_query($SQL, array(':ip' => $ip, ':date' => $dates['date']));
+
+				$query = db_select($from, 'nord')
+					->fields('nord', array('date', 'type'));
+				$query->addExpression('SUM(in_packet)', 'in_packet');
+				$query->addExpression('SUM(out_packet)', 'out_packet');
+				$query->addExpression('SUM(in_byte)', 'in_byte');
+				$query->addExpression('SUM(out_byte)', 'out_byte');
+				$query
+				  ->condition('ip', $ip)
+				  ->where('DATE(date) = :date', array(':date' => $dates['date']))
+				  ->groupBy('HOUR(date)')
+				  ->groupBy('type')
+				  ->orderBy('date', 'DESC');
+				$result = $query->execute();
 
 				// Vissza valtas az alapertelmezett SQL szerverhez
 				db_set_active();
@@ -664,10 +678,23 @@ function myntcd_ip($ip, $when = '', $date = '') {
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-				$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
-				$SQL .= "GROUP BY date, ip, type ORDER BY date DESC";
-				$result = db_query($SQL);
+				// $SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
+				// $SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
+				// $SQL .= "GROUP BY date, ip, type ORDER BY date DESC";
+				// $result = db_query($SQL);
+
+				$query = db_select('tmp_table', 't')
+					->fields('t', array('date', 'type'));
+				$query->addExpression('SUM(in_packet)', 'in_packet');
+				$query->addExpression('SUM(out_packet)', 'out_packet');
+				$query->addExpression('SUM(in_byte)', 'in_byte');
+				$query->addExpression('SUM(out_byte)', 'out_byte');
+				$query
+				  ->groupBy('date')
+				  ->groupBy('ip')
+				  ->groupBy('type')
+				  ->orderBy('date', 'DESC');
+				$result = $query->execute();
 
 				// Vissza valtas az alapertelmezett SQL szerverhez
 				db_set_active();
@@ -682,10 +709,23 @@ function myntcd_ip($ip, $when = '', $date = '') {
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				$SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-				$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
-				$SQL .= "GROUP BY month(date), ip, type ORDER BY date DESC";
-				$result = db_query($SQL);
+				// $SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
+				// $SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
+				// $SQL .= "GROUP BY month(date), ip, type ORDER BY date DESC";
+				// $result = db_query($SQL);
+
+				$query = db_select('tmp_table', 't')
+					->fields('t', array('date', 'type'));
+				$query->addExpression('SUM(in_packet)', 'in_packet');
+				$query->addExpression('SUM(out_packet)', 'out_packet');
+				$query->addExpression('SUM(in_byte)', 'in_byte');
+				$query->addExpression('SUM(out_byte)', 'out_byte');
+				$query
+				  ->groupBy('MONTH(date)')
+				  ->groupBy('ip')
+				  ->groupBy('type')
+				  ->orderBy('date', 'DESC');
+				$result = $query->execute();
 
 				// Vissza valtas az alapertelmezett SQL szerverhez
 				db_set_active();
