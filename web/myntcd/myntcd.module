@@ -962,56 +962,10 @@ function myntcd_top($when = '', $date = '') {
  * A feketelistan levo ip cimek megjelenitese
  * @param form
  * @param form_state
- * @return form az oldal megjelenitesehez szukseges adatotkkal ter vissza
+ * @return egy segedfugvenyt hiv meg
  */
 function myntcd_filter_blacklist($form, &$form_state) {
-	// Kapcsolodas az SQL szerverhez
-	db_set_active('myntcd');
-
-	$SQL = "SELECT * FROM filter WHERE blacklist = 1 ORDER BY date DESC, ip";
-	$result = db_query($SQL);
-
-	// Vissza valtas az alapertelmezett SQL szerverhez
-	db_set_active();
-
-	$form['table']['#tree'] = TRUE;
-
-	while ($row = $result->fetchAssoc()) {
-		$form['table'][$row['ip']] = array(
-			'chk' => array(
-				'#type' => 'checkbox',
-			),
-			'ip_address' => array(
-				'#type' => 'link',
-				'#title' => $row['ip'],
-				'#href' => 'myntcd/ip/'.$row['ip'],
-			),
-			'end_date' => array(
-				'#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
-			),
-			'comment' => array(
-				'#type' => 'textfield',
-				'#default_value' => $row['comment'],
-			),
-		);
-	}
-
-  $form['white'] = array(
-		'#type' => 'submit',
-		'#value' => t('Add Whitelist'),
-	);
-
-	$form['save'] = array(
-		'#type' => 'submit',
-		'#value' => t('Save'),
-	);
-
-	$form['remove'] = array(
-		'#type' => 'submit',
-		'#value' => t('Delete'),
-	);
-
-	return $form;
+	return _myntcd_filter_bwform(1);
 } // function myntcd_filter_blacklist()
 
 
@@ -1021,38 +975,7 @@ function myntcd_filter_blacklist($form, &$form_state) {
  * @param form_state
  */
 function myntcd_filter_blacklist_submit($form, &$form_state) {
-	foreach ($form_state['values']['table'] as $ip => $items) {
-		if ($items['chk']) {
-			if ( $form_state['values']['op'] == t('Save') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = 1";
-				db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			} elseif ( $form_state['values']['op'] == t('Delete') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "DELETE FROM filter WHERE ip = :ip AND blacklist = 1";
-				db_query($SQL, array(':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			} elseif ( $form_state['values']['op'] == t('Add Whitelist') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "UPDATE filter SET blacklist = 0 WHERE ip = :ip AND blacklist = 1";
-				db_query($SQL, array(':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			}
-		}
-	}
+	_myntcd_filter_bwsubmit($form_state);
 } // function myntcd_filter_blacklist_submit()
 
 
@@ -1060,50 +983,10 @@ function myntcd_filter_blacklist_submit($form, &$form_state) {
  * A feherlistan levo ip cimek megjelenitese
  * @param form
  * @param form_state
- * @return form az oldal megjelenitesehez szukseges adatotkkal ter vissza
+ * @return egy segedfugvenyt hiv meg
  */
 function myntcd_filter_whitelist($form, &$form_state) {
-	// Kapcsolodas az SQL szerverhez
-	db_set_active('myntcd');
-
-	$SQL = "SELECT * FROM filter WHERE blacklist = 0 ORDER BY date DESC, ip";
-	$result = db_query($SQL);
-
-	// Vissza valtas az alapertelmezett SQL szerverhez
-	db_set_active();
-
-	$form['table']['#tree'] = TRUE;
-	while ($row = $result->fetchAssoc()) {
-		$form['table'][$row['ip']] = array(
-			'chk' => array(
-				'#type' => 'checkbox',
-			),
-			'ip_address' => array(
-				'#type' => 'link',
-				'#title' => $row['ip'],
-				'#href' => 'myntcd/ip/'.$row['ip'],
-			),
-			'end_date' => array(
-				'#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
-			),
-			'comment' => array(
-				'#type' => 'textfield',
-				'#default_value' => $row['comment'],
-			),
-		);
-	}
-
-	$form['save'] = array(
-		'#type' => 'submit',
-		'#value' => t('Save'),
-	);
-
-	$form['remove'] = array(
-		'#type' => 'submit',
-		'#value' => t('Delete'),
-	);
-
-	return $form;
+	return _myntcd_filter_bwform(0);
 } // function myntcd_filter_whitelist()
 
 
@@ -1113,29 +996,7 @@ function myntcd_filter_whitelist($form, &$form_state) {
  * @param form_state
  */
 function myntcd_filter_whitelist_submit($form, &$form_state) {
-	foreach ($form_state['values']['table'] as $ip => $items) {
-		if ($items['chk']) {
-			if ( $form_state['values']['op'] == t('Save') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = 0";
-				db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			} elseif ( $form_state['values']['op'] == t('Delete') ) {
-				// Kapcsolodas az SQL szerverhez
-				db_set_active('myntcd');
-
-				$SQL = "DELETE FROM filter WHERE ip =:ip AND blacklist = 0";
-				db_query($SQL, array(':ip' => $ip));
-
-				// Vissza valtas az alapertelmezett SQL szerverhez
-				db_set_active();
-			}
-		}
-	}
+	_myntcd_filter_bwsubmit($form_state);
 } // function myntcd_filter_whitelist_submit()
 
 
@@ -1328,7 +1189,7 @@ function theme_myntcd_rrds($variables) {
 
 
 /**
- * theme_myntcd_when: egyseges theme
+ * theme_myntcd_tables: egyseges theme a tablazatoknak
  * @param variables a smikeleshez szukseges adatokat tartalmazza
  * @return adott oldallal ter vissza
  */
@@ -1418,7 +1279,7 @@ function theme_myntcd_tables($variables) {
 	}
 
 	return $output;
-} // function theme_myntcd_when()
+} // function theme_myntcd_tables()
 
 
 /**
@@ -1925,7 +1786,109 @@ function _myntcd_process_tabledatas($variables) {
 
 
 /**
- * A felekete és feher listat kesziti el
+ * A fekete lista es a feher lista formjat kesziti el.
+ * @param $black_or_white fekete/feher lista kell e
+ * @return $form az adott listanak az oldala
+ */
+function _myntcd_filter_bwform($black_or_white) {
+	// Kapcsolodas az SQL szerverhez
+	db_set_active('myntcd');
+
+	$SQL = "SELECT * FROM filter WHERE blacklist = :borw ORDER BY date DESC, ip";
+	$result = db_query($SQL, array(':borw' => $black_or_white));
+
+	// Vissza valtas az alapertelmezett SQL szerverhez
+	db_set_active();
+
+	$form['table']['#tree'] = TRUE;
+	while ($row = $result->fetchAssoc()) {
+		$form['table'][$row['ip']] = array(
+			'chk' => array(
+				'#type' => 'checkbox',
+			),
+			'ip_address' => array(
+				'#type' => 'link',
+				'#title' => $row['ip'],
+				'#href' => 'myntcd/ip/'.$row['ip'],
+			),
+			'end_date' => array(
+				'#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
+			),
+			'comment' => array(
+				'#type' => 'textfield',
+				'#default_value' => $row['comment'],
+			),
+		);
+	}
+
+	$form['black_or_white'] = array(
+		'#type' => 'hidden',
+		'#value' => $black_or_white
+	);
+
+	if ($black_or_white) {
+	  $form['white'] = array(
+			'#type' => 'submit',
+			'#value' => t('Add Whitelist'),
+		);
+	}
+
+	$form['save'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+	);
+
+	$form['remove'] = array(
+		'#type' => 'submit',
+		'#value' => t('Delete'),
+	);
+
+	return $form;
+} // function _myntcd_filter_bwform()
+
+
+/**
+ * A fekete lista es a feher lista muveleteit hajtja vegre.
+ * @param form_state szukseges adatokat tarolja
+ */
+function _myntcd_filter_bwsubmit(&$form_state) {
+	foreach ($form_state['values']['table'] as $ip => $items) {
+		if ($items['chk']) {
+			if ($form_state['values']['op'] == t('Save')) {
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = :borw";
+				db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip, ':borw' => $form_state['values']['black_or_white']));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+			} elseif ( $form_state['values']['op'] == t('Delete') ) {
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "DELETE FROM filter WHERE ip = :ip AND blacklist = :borw";
+				db_query($SQL, array(':ip' => $ip, ':borw' => $form_state['values']['black_or_white']));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+			} elseif ( $form_state['values']['op'] == t('Add Whitelist') ) {
+				// Kapcsolodas az SQL szerverhez
+				db_set_active('myntcd');
+
+				$SQL = "UPDATE filter SET blacklist = 0 WHERE ip = :ip AND blacklist = 1";
+				db_query($SQL, array(':ip' => $ip));
+
+				// Vissza valtas az alapertelmezett SQL szerverhez
+				db_set_active();
+			}
+		}
+	}
+} // function _myntcd_filter_bwsubmit()
+
+
+/**
+ * A felekete és feher listanak a tablazatat kesziti el
  * @param variables a smikeleshez szukseges adatokat tartalmazza
  * @return adott oldallal ter vissza
  */
