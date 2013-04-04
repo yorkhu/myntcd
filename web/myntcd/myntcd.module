@@ -590,8 +590,14 @@ function myntcd_search_form_submit($form, &$form_state) {
 	// Kapcsolodas az SQL szerverhez
 	db_set_active('myntcd');
 
-	$SQL = "SELECT ip FROM now WHERE ip = :ip";
-	$result = db_query_range($SQL, 0, 1, array(':ip' => $form_state['values']['ip']));
+	// $SQL = "SELECT ip FROM now WHERE ip = :ip";
+	// $result = db_query_range($SQL, 0, 1, array(':ip' => $form_state['values']['ip']));
+
+	$query = db_select('now', 'n')
+		->fields('n', array('ip'))
+		->condition('ip', $form_state['values']['ip'])
+	  ->range(0, 1);
+	$result = $query->execute();
 
 	// Vissza valtas az alapertelmezett SQL szerverhez
 	db_set_active();
