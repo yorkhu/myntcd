@@ -985,9 +985,22 @@ function myntcd_top($when = '', $date = '') {
 					db_set_active('myntcd');
 
 					// Napi Top lista
-					$SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
-					$SQL .= "FROM now WHERE date(date) = :date GROUP BY ip, date(date) ORDER BY total DESC";
-					$result = db_query_range($SQL, 0, 20, array(':date' => $dates['date']));
+					// $SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
+					// $SQL .= "FROM now WHERE date(date) = :date GROUP BY ip, date(date) ORDER BY total DESC";
+					// $result = db_query_range($SQL, 0, 20, array(':date' => $dates['date']));
+
+					$query = db_select('now', 'n')
+						->fields('n', array('ip'));
+					$query->addExpression('SUM(in_byte)', 'in_byte');
+					$query->addExpression('SUM(out_byte)', 'out_byte');
+					$query->addExpression('SUM(in_byte) + SUM(out_byte)', 'total');
+					$query
+					  ->where('DATE(date) = :date', array(':date' => $dates['date']))
+					  ->groupBy('ip')
+					  ->groupBy('DATE(date)')
+					  ->orderBy('total', 'DESC')
+					  ->range(0, 20);
+					$result = $query->execute();
 
 					// Vissza valtas az alapertelmezett SQL szerverhez
 					db_set_active();
@@ -998,9 +1011,22 @@ function myntcd_top($when = '', $date = '') {
 					// Kapcsolodas az SQL szerverhez
 					db_set_active('myntcd');
 
-					$SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
-					$SQL .= "FROM tmp_table WHERE date >= :start AND date <= :stop GROUP BY ip  ORDER BY total DESC";
-					$result = db_query_range($SQL, 0, 20, array(':start' => $dates['start'], ':stop' => $dates['stop']));
+					// $SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
+					// $SQL .= "FROM tmp_table WHERE date >= :start AND date <= :stop GROUP BY ip  ORDER BY total DESC";
+					// $result = db_query_range($SQL, 0, 20, array(':start' => $dates['start'], ':stop' => $dates['stop']));
+
+					$query = db_select('tmp_table', 't')
+						->fields('t', array('ip'));
+					$query->addExpression('SUM(in_byte)', 'in_byte');
+					$query->addExpression('SUM(out_byte)', 'out_byte');
+					$query->addExpression('SUM(in_byte) + SUM(out_byte)', 'total');
+					$query
+					  ->condition('date', $dates['start'], '>=')
+					  ->condition('date', $dates['stop'], '<=')
+					  ->groupBy('ip')
+					  ->orderBy('total', 'DESC')
+					  ->range(0, 20);
+					$result = $query->execute();
 
 					// Vissza valtas az alapertelmezett SQL szerverhez
 					db_set_active();
@@ -1036,18 +1062,31 @@ function myntcd_top($when = '', $date = '') {
 				case 'daily': // Napi forgalom
 					// Napnak megfelelo adatbazis kivalasztasa
 					if ($dates['date'] == date('Y-m-d')) {
-						$from = "FROM now";
+						$from = "now";
 					} else {
-						$from = "FROM daily";
+						$from = "daily";
 					}
 
 					// Kapcsolodas az SQL szerverhez
 					db_set_active('myntcd');
 
 					// Napi Top lista
-					$SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
-					$SQL .= $from." WHERE date(date) = :date GROUP BY ip, date(date) ORDER BY ".$order_by." DESC";
-					$result = db_query_range($SQL, 0, 20, array(':date' => $dates['date']));
+					// $SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
+					// $SQL .= "FROM ".$from." WHERE date(date) = :date GROUP BY ip, date(date) ORDER BY ".$order_by." DESC";
+					// $result = db_query_range($SQL, 0, 20, array(':date' => $dates['date']));
+
+					$query = db_select($from, 'nord')
+						->fields('nord', array('ip'));
+					$query->addExpression('SUM(in_byte)', 'in_byte');
+					$query->addExpression('SUM(out_byte)', 'out_byte');
+					$query->addExpression('SUM(in_byte) + SUM(out_byte)', 'total');
+					$query
+					  ->where('DATE(date) = :date', array(':date' => $dates['date']))
+					  ->groupBy('ip')
+					  ->groupBy('DATE(date)')
+					  ->orderBy($order_by, 'DESC')
+					  ->range(0, 20);
+					$result = $query->execute();
 
 					// Vissza valtas az alapertelmezett SQL szerverhez
 					db_set_active();
@@ -1058,9 +1097,20 @@ function myntcd_top($when = '', $date = '') {
 					// Kapcsolodas az SQL szerverhez
 					db_set_active('myntcd');
 
-					$SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
-					$SQL .= "FROM tmp_table GROUP BY ip ORDER BY ".$order_by." DESC";
-					$result = db_query_range($SQL, 0, 20);
+					// $SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
+					// $SQL .= "FROM tmp_table GROUP BY ip ORDER BY ".$order_by." DESC";
+					// $result = db_query_range($SQL, 0, 20);
+
+					$query = db_select('tmp_table', 't')
+						->fields('t', array('ip'));
+					$query->addExpression('SUM(in_byte)', 'in_byte');
+					$query->addExpression('SUM(out_byte)', 'out_byte');
+					$query->addExpression('SUM(in_byte) + SUM(out_byte)', 'total');
+					$query
+					  ->groupBy('ip')
+					  ->orderBy($order_by, 'DESC')
+					  ->range(0, 20);
+					$result = $query->execute();
 
 					// Vissza valtas az alapertelmezett SQL szerverhez
 					db_set_active();
