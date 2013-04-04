@@ -407,27 +407,35 @@ function myntcd_my_traffic($when = '', $date = '') {
 
 	_myntcd_set_title('myip', $my_ip, $dates['start'], $dates['stop']);
 
+	// Kapcsolodas az SQL szerverhez
+	db_set_active('myntcd');
+
+	// $SQL = "SELECT * FROM filter WHERE ip = :ip AND date >= :date AND blacklist = 1";
+	// $result = db_query($SQL, array(':ip' => $my_ip, ':date' => $dates['date']));
+
+	$query = db_select('filter', 'f')
+		->fields('f')
+	  ->condition('ip', $my_ip)
+	  ->condition('date', $dates['date'], '>=')
+	  ->condition('blacklist', 1);
+	$result = $query->execute();
+
+	// Vissza valtas az alapertelmezett SQL szerverhez
+	db_set_active();
+
+	// Ha feketelistan van az ipcim
+	if ($filter = $result->fetchAssoc()) {
+		drupal_set_message(
+			t(
+				'The IP address transfer blocking: !date',
+				array('!date' => $filter['date'].' 23:59:59')
+			),
+			'warning'
+		);
+	}
+
 	switch ($when) {
 		case '':
-			// Kapcsolodas az SQL szerverhez
-			db_set_active('myntcd');
-
-			$SQL = "SELECT * FROM filter WHERE ip = :ip AND date >= :date AND blacklist = 1";
-			$result = db_query($SQL, array(':ip' => $my_ip, ':date' => $dates['date']));
-
-			// Vissza valtas az alapertelmezett SQL szerverhez
-			db_set_active();
-
-			if ($filter = $result->fetchAssoc()) {
-				drupal_set_message(
-					t(
-						'The IP address transfer blocking: !date',
-						array('!date' => $filter['date'].'23:59:59')
-					),
-					'warning'
-				);
-			}
-
 			// Osszegzes kepernyo
 			$build['myntcd_my_traffic'] = array(
 			  '#theme' => 'myntcd_rrds',
@@ -442,9 +450,20 @@ function myntcd_my_traffic($when = '', $date = '') {
 			db_set_active('myntcd');
 
 			// A mai nap forgalmi adatai orankenti bontasban
-			$SQL = "SELECT date, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM now ";
-			$SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date) ORDER BY date DESC";
-			$result = db_query($SQL, array(':ip' => $my_ip, ':date' => $dates['date']));
+			// $SQL = "SELECT date, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM now ";
+			// $SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date) ORDER BY date DESC";
+			// $result = db_query($SQL, array(':ip' => $my_ip, ':date' => $dates['date']));
+
+			$query = db_select('now', 'n')
+				->fields('n', array('date'));
+			$query->addExpression('SUM(in_byte)', 'in_byte');
+			$query->addExpression('SUM(out_byte)', 'out_byte');
+			$query
+			  ->condition('ip', $my_ip)
+			  ->where('DATE(date) = :date', array(':date' => $dates['date']))
+			  ->groupBy('HOUR(date)')
+			  ->orderBy('date', 'DESC');
+			$result = $query->execute();
 
 			// Vissza valtas az alapertelmezett SQL szerverhez
 			db_set_active();
@@ -459,8 +478,13 @@ function myntcd_my_traffic($when = '', $date = '') {
 			// Kapcsolodas az SQL szerverhez
 			db_set_active('myntcd');
 
-			$SQL = "SELECT date, in_byte, out_byte FROM tmp_table ORDER BY date DESC";
-			$result = db_query($SQL);
+			// $SQL = "SELECT date, in_byte, out_byte FROM tmp_table ORDER BY date DESC";
+			// $result = db_query($SQL);
+
+			$query = db_select('tmp_table', 't')
+				->fields('t', array('date', 'in_byte', 'out_byte'))
+			  ->orderBy('date', 'DESC');
+			$result = $query->execute();
 
 			// Vissza valtas az alapertelmezett SQL szerverhez
 			db_set_active();
@@ -474,9 +498,18 @@ function myntcd_my_traffic($when = '', $date = '') {
 			// Kapcsolodas az SQL szerverhez
 			db_set_active('myntcd');
 
-			$SQL = "SELECT date, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte ";
-			$SQL .= "FROM tmp_table GROUP BY month(date) ORDER BY date DESC";
-			$result = db_query($SQL);
+			// $SQL = "SELECT date, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte ";
+			// $SQL .= "FROM tmp_table GROUP BY month(date) ORDER BY date DESC";
+			// $result = db_query($SQL);
+
+			$query = db_select('tmp_table', 't')
+				->fields('t', array('date'));
+			$query->addExpression('SUM(in_byte)', 'in_byte');
+			$query->addExpression('SUM(out_byte)', 'out_byte');
+			$query
+			  ->groupBy('MONTH(date)')
+			  ->orderBy('date', 'DESC');
+			$result = $query->execute();
 
 			// Vissza valtas az alapertelmezett SQL szerverhez
 			db_set_active();
@@ -1388,10 +1421,12 @@ function _myntcd_getback_dates($when, $date, $path) {
 			$dates['stop'] = '';
 			break;
 		case 'weekly':
+			$dates['date'] = $date;
 			$dates['start'] = date('Y-m-d', strtotime($date.' -1 week +1 day'));
 			$dates['stop'] = $date;
 			break;
 		case 'monthly':
+			$dates['date'] = date('Y-m-d');
 			$dates['start'] = $date;
 
 			if (strtotime('now') < strtotime($date.' +1 month')) {
@@ -1401,6 +1436,8 @@ function _myntcd_getback_dates($when, $date, $path) {
 			}
 			break;
 		case 'yearly':
+			$dates['date'] = date('Y-m-d');
+
 			if (strtotime(date('Y')) > strtotime(date('Y', strtotime($date)))) {
 				$dates['start'] = date('Y', strtotime($date)).'-01-01';
 				$dates['stop'] = date('Y', strtotime($date)).'-12-31';
