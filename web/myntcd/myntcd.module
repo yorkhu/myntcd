@@ -776,8 +776,13 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 		db_set_active('myntcd');
 
 		// IP tartomanyok listazasa
-		$SQL = "SELECT iprange FROM ipranges ORDER BY iprange ASC";
-		$result = db_query($SQL);
+		// $SQL = "SELECT iprange FROM ipranges ORDER BY iprange ASC";
+		// $result = db_query($SQL);
+
+		$query = db_select('ipranges', 'i')
+			->fields('i', array('iprange'))
+			->orderBy('iprange', 'ASC');
+		$result = $query->execute();
 
 		// Vissza valtas az alapertelmezett SQL szerverhez
 		db_set_active();
@@ -829,18 +834,45 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 				db_set_active('myntcd');
 
 				if ($iprange == 'all') {
-					$SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM($nowordaily.in_byte) AS in_byte, ";
-					$SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
-					$SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date ";
-					$SQL .= "GROUP BY ipranges.ipr_id ORDER BY $nowordaily.ip";
-					$result = db_query($SQL, array(':date' => $dates['date']));
+					// $SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM($nowordaily.in_byte) AS in_byte, ";
+					// $SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
+					// $SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date ";
+					// $SQL .= "GROUP BY ipranges.ipr_id ORDER BY $nowordaily.ip";
+					// $result = db_query($SQL, array(':date' => $dates['date']));
+
+					$query = db_select($nowordaily, 'nord');
+					$query->join('ipranges', 'i', 'i.ipr_id = nord.ipr_id');
+					$query->fields('i', array('ipr_id', 'iprange'));
+					$query->addExpression('SUM(nord.in_byte)', 'in_byte');
+					$query->addExpression('SUM(nord.out_byte)', 'out_byte');
+					$query->addExpression('SUM(nord.in_byte) + SUM(nord.out_byte)', 'total');
+					$query
+					  ->where('DATE(nord.date) = :date', array(':date' => $dates['date']))
+					  ->groupBy('i.ipr_id')
+					  ->orderBy('nord.ip');
+					$result = $query->execute();
 				} else {
 					// IP tartomanyhoz tartozo napi forgalom
-					$SQL = "SELECT ipranges.iprange, $nowordaily.ip, SUM($nowordaily.in_byte) AS in_byte, ";
-					$SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
-					$SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date AND ipranges.iprange = :iprange ";
-					$SQL .= "GROUP BY $nowordaily.ip ORDER BY total DESC";
-					$result = db_query($SQL, array(':date' => $dates['date'], ':iprange' => $iprange));
+					// $SQL = "SELECT ipranges.iprange, $nowordaily.ip, SUM($nowordaily.in_byte) AS in_byte, ";
+					// $SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
+					// $SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date AND ipranges.iprange = :iprange ";
+					// $SQL .= "GROUP BY $nowordaily.ip ORDER BY total DESC";
+					// $result = db_query($SQL, array(':date' => $dates['date'], ':iprange' => $iprange));
+
+					$query = db_select($nowordaily, 'nord');
+					$query->join('ipranges', 'i', 'i.ipr_id = nord.ipr_id');
+					$query
+						->fields('i', array('iprange'))
+						->fields('nord', array('ip'));
+					$query->addExpression('SUM(nord.in_byte)', 'in_byte');
+					$query->addExpression('SUM(nord.out_byte)', 'out_byte');
+					$query->addExpression('SUM(nord.in_byte) + SUM(nord.out_byte)', 'total');
+					$query
+					  ->where('DATE(nord.date) = :date', array(':date' => $dates['date']))
+					  ->condition('i.iprange', $iprange)
+					  ->groupBy('nord.ip')
+					  ->orderBy('total', 'DESC');
+					$result = $query->execute();
 				}
 
 				// Vissza valtas az alapertelmezett SQL szerverhez
@@ -855,17 +887,42 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 				db_set_active('myntcd');
 
 				if ($iprange == 'all') {
-					$SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM(tmp_table.in_byte) AS in_byte, ";
-					$SQL .= "SUM(tmp_table.out_byte) AS out_byte, SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
-					$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id ";
-					$SQL .= "GROUP BY ipranges.ipr_id ORDER BY tmp_table.ip";
-					$result = db_query($SQL);
+					// $SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM(tmp_table.in_byte) AS in_byte, ";
+					// $SQL .= "SUM(tmp_table.out_byte) AS out_byte, SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
+					// $SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id ";
+					// $SQL .= "GROUP BY ipranges.ipr_id ORDER BY tmp_table.ip";
+					// $result = db_query($SQL);
+
+					$query = db_select('tmp_table', 't');
+					$query->join('ipranges', 'i', 'i.ipr_id = t.ipr_id');
+					$query->fields('i', array('ipr_id', 'iprange'));
+					$query->addExpression('SUM(t.in_byte)', 'in_byte');
+					$query->addExpression('SUM(t.out_byte)', 'out_byte');
+					$query->addExpression('SUM(t.in_byte) + SUM(t.out_byte)', 'total');
+					$query
+					  ->groupBy('i.ipr_id')
+					  ->orderBy('t.ip');
+					$result = $query->execute();
 				} else {
-					$SQL = "SELECT ipranges.iprange, tmp_table.ip, SUM(tmp_table.in_byte) AS in_byte, SUM(tmp_table.out_byte) AS out_byte, ";
-					$SQL .= "SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
-					$SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id AND ipranges.iprange = :iprange ";
-					$SQL .= "GROUP BY tmp_table.ip ORDER BY total DESC";
-					$result = db_query($SQL, array(':iprange' => $iprange));
+					// $SQL = "SELECT ipranges.iprange, tmp_table.ip, SUM(tmp_table.in_byte) AS in_byte, SUM(tmp_table.out_byte) AS out_byte, ";
+					// $SQL .= "SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
+					// $SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id AND ipranges.iprange = :iprange ";
+					// $SQL .= "GROUP BY tmp_table.ip ORDER BY total DESC";
+					// $result = db_query($SQL, array(':iprange' => $iprange));
+
+					$query = db_select('tmp_table', 't');
+					$query->join('ipranges', 'i', 'i.ipr_id = t.ipr_id');
+					$query
+						->fields('i', array('iprange'))
+						->fields('t', array('ip'));
+					$query->addExpression('SUM(t.in_byte)', 'in_byte');
+					$query->addExpression('SUM(t.out_byte)', 'out_byte');
+					$query->addExpression('SUM(t.in_byte) + SUM(t.out_byte)', 'total');
+					$query
+					  ->condition('i.iprange', $iprange)
+					  ->groupBy('t.ip')
+					  ->orderBy('total', 'DESC');
+					$result = $query->execute();
 				}
 
 				// Vissza valtas az alapertelmezett SQL szerverhez
