@@ -1267,24 +1267,41 @@ function myntcd_filter_add_submit($form, &$form_state) {
 	// Kapcsolodas az SQL szerverhez
 	db_set_active('myntcd');
 
+	// $sqlvalues = array(
+	// 	':ip' => $form_state['values']['filter_ip'],
+	// 	':blacklist' => $form_state['values']['filter_type'],
+	// 	':comment' => $form_state['values']['filter_comment'],
+	// );
+
+	// $SQL = "INSERT INTO filter (ip, blacklist, comment, date) VALUES (:ip, :blacklist, :comment, ";
+	// if ($form_state['values']['filter_time'] == '-1') {
+	// 	$SQL .= "DEFAULT)";
+	// } else {
+	// 	$filtertime = $form_state['values']['filter_time'] * $form_state['values']['filter_time_interval'];
+	// 	$filtertime = date('Y-m-d', strtotime('+'.$filtertime.' day'));
+
+	// 	$SQL .= ":date)";
+	// 	$sqlvalues[':date'] = $filtertime;
+	// }
+
+	// db_query($SQL, $sqlvalues);
+
 	$sqlvalues = array(
-		':ip' => $form_state['values']['filter_ip'],
-		':blacklist' => $form_state['values']['filter_type'],
-		':comment' => $form_state['values']['filter_comment'],
+	    'ip' => $form_state['values']['filter_ip'],
+	    'blacklist' => $form_state['values']['filter_type'],
+	    'comment' => $form_state['values']['filter_comment'],
 	);
 
-	$SQL = "INSERT INTO filter (ip, blacklist, comment, date) VALUES (:ip, :blacklist, :comment, ";
-	if ($form_state['values']['filter_time'] == '-1') {
-		$SQL .= "DEFAULT)";
-	} else {
+	if ($form_state['values']['filter_time'] != '-1') {
 		$filtertime = $form_state['values']['filter_time'] * $form_state['values']['filter_time_interval'];
 		$filtertime = date('Y-m-d', strtotime('+'.$filtertime.' day'));
 
-		$SQL .= ":date)";
-		$sqlvalues[':date'] = $filtertime;
+		$sqlvalues['date'] = $filtertime;
 	}
 
-	db_query($SQL, $sqlvalues);
+	$query = db_insert('filter')
+	  ->fields($sqlvalues)
+		->execute();
 
 	// Vissza valtas az alapertelmezett SQL szerverhez
 	db_set_active();
