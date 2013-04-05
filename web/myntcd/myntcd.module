@@ -2010,29 +2010,42 @@ function _myntcd_filter_bwform($black_or_white) {
 	// Kapcsolodas az SQL szerverhez
 	db_set_active('myntcd');
 
-	$SQL = "SELECT * FROM filter WHERE blacklist = :borw ORDER BY date DESC, ip";
-	$result = db_query($SQL, array(':borw' => $black_or_white));
+	// $SQL = "SELECT * FROM filter WHERE blacklist = :borw ORDER BY date DESC, ip";
+	// $result = db_query($SQL, array(':borw' => $black_or_white));
+
+	$query = db_select('filter', 'f')
+	  ->fields('f')
+	  ->condition('blacklist', $black_or_white)
+	  ->orderBy('date', 'DESC')
+	  ->orderBy('ip');
+	$result = $query->execute();
 
 	// Vissza valtas az alapertelmezett SQL szerverhez
 	db_set_active();
 
 	$form['table']['#tree'] = TRUE;
-	while ($row = $result->fetchAssoc()) {
-		$form['table'][$row['ip']] = array(
+	// while ($row = $result->fetchAssoc()) {
+	foreach ($result as $row) {
+		// $form['table'][$row['ip']] = array(
+		$form['table'][$row->ip] = array(
 			'chk' => array(
 				'#type' => 'checkbox',
 			),
 			'ip_address' => array(
 				'#type' => 'link',
-				'#title' => $row['ip'],
-				'#href' => 'myntcd/ip/'.$row['ip'],
+				// '#title' => $row['ip'],
+				'#title' => $row->ip,
+				// '#href' => 'myntcd/ip/'.$row['ip'],
+				'#href' => 'myntcd/ip/'.$row->ip,
 			),
 			'end_date' => array(
-				'#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
+				// '#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
+				'#markup' => $row->date == '0000-00-00' ? t('for ever') : $row->date,
 			),
 			'comment' => array(
 				'#type' => 'textfield',
-				'#default_value' => $row['comment'],
+				// '#default_value' => $row['comment'],
+				'#default_value' => $row->comment,
 			),
 		);
 	}
