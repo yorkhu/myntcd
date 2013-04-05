@@ -410,9 +410,6 @@ function myntcd_my_traffic($when = '', $date = '') {
 	// Kapcsolodas az SQL szerverhez
 	db_set_active('myntcd');
 
-	// $SQL = "SELECT * FROM filter WHERE ip = :ip AND date >= :date AND blacklist = 1";
-	// $result = db_query($SQL, array(':ip' => $my_ip, ':date' => $dates['date']));
-
 	$query = db_select('filter', 'f')
 		->fields('f')
 	  ->condition('ip', $my_ip)
@@ -450,10 +447,6 @@ function myntcd_my_traffic($when = '', $date = '') {
 			db_set_active('myntcd');
 
 			// A mai nap forgalmi adatai orankenti bontasban
-			// $SQL = "SELECT date, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM now ";
-			// $SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date) ORDER BY date DESC";
-			// $result = db_query($SQL, array(':ip' => $my_ip, ':date' => $dates['date']));
-
 			$query = db_select('now', 'n')
 				->fields('n', array('date'));
 			$query->addExpression('SUM(in_byte)', 'in_byte');
@@ -473,15 +466,12 @@ function myntcd_my_traffic($when = '', $date = '') {
 			break;
 		case 'weekly': // Heti forgalom
 		case 'monthly': // Havi forgalom
-			_myntcd_create_tmptable('myip', $dates['start'], $dates['stop'], $my_ip);
+			$tmp_table = _myntcd_create_tmptable('myip', $dates['start'], $dates['stop'], $my_ip);
 
 			// Kapcsolodas az SQL szerverhez
 			db_set_active('myntcd');
 
-			// $SQL = "SELECT date, in_byte, out_byte FROM tmp_table ORDER BY date DESC";
-			// $result = db_query($SQL);
-
-			$query = db_select('tmp_table', 't')
+			$query = db_select($tmp_table, 't')
 				->fields('t', array('date', 'in_byte', 'out_byte'))
 			  ->orderBy('date', 'DESC');
 			$result = $query->execute();
@@ -493,16 +483,12 @@ function myntcd_my_traffic($when = '', $date = '') {
 
 			break;
 		case 'yearly': // Eves forgalom
-			_myntcd_create_tmptable('myip', $dates['start'], $dates['stop'], $my_ip);
+			$tmp_table = _myntcd_create_tmptable('myip', $dates['start'], $dates['stop'], $my_ip);
 
 			// Kapcsolodas az SQL szerverhez
 			db_set_active('myntcd');
 
-			// $SQL = "SELECT date, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte ";
-			// $SQL .= "FROM tmp_table GROUP BY month(date) ORDER BY date DESC";
-			// $result = db_query($SQL);
-
-			$query = db_select('tmp_table', 't')
+			$query = db_select($tmp_table, 't')
 				->fields('t', array('date'));
 			$query->addExpression('SUM(in_byte)', 'in_byte');
 			$query->addExpression('SUM(out_byte)', 'out_byte');
@@ -590,9 +576,6 @@ function myntcd_search_form_submit($form, &$form_state) {
 	// Kapcsolodas az SQL szerverhez
 	db_set_active('myntcd');
 
-	// $SQL = "SELECT ip FROM now WHERE ip = :ip";
-	// $result = db_query_range($SQL, 0, 1, array(':ip' => $form_state['values']['ip']));
-
 	$query = db_select('now', 'n')
 		->fields('n', array('ip'))
 		->condition('ip', $form_state['values']['ip'])
@@ -646,11 +629,6 @@ function myntcd_ip($ip, $when = '', $date = '') {
 				db_set_active('myntcd');
 
 				// A mai nap forgalmi adatai orankenti bontasban
-				// $SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-				// $SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM ".$from." ";
-				// $SQL .= "WHERE ip = :ip AND date(date) = :date GROUP BY hour(date), type ORDER BY date DESC";
-				// $result = db_query($SQL, array(':ip' => $ip, ':date' => $dates['date']));
-
 				$query = db_select($from, 'nord')
 					->fields('nord', array('date', 'type'));
 				$query->addExpression('SUM(in_packet)', 'in_packet');
@@ -673,17 +651,12 @@ function myntcd_ip($ip, $when = '', $date = '') {
 				break;
 			case 'weekly': // Heti forgalom
 			case 'monthly': // Havi forgalom
-				_myntcd_create_tmptable('ip', $dates['start'], $dates['stop'], $ip);
+				$tmp_table = _myntcd_create_tmptable('ip', $dates['start'], $dates['stop'], $ip);
 
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				// $SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-				// $SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
-				// $SQL .= "GROUP BY date, ip, type ORDER BY date DESC";
-				// $result = db_query($SQL);
-
-				$query = db_select('tmp_table', 't')
+				$query = db_select($tmp_table, 't')
 					->fields('t', array('date', 'type'));
 				$query->addExpression('SUM(in_packet)', 'in_packet');
 				$query->addExpression('SUM(out_packet)', 'out_packet');
@@ -704,17 +677,12 @@ function myntcd_ip($ip, $when = '', $date = '') {
 
 				break;
 			case 'yearly': // Eves forgalom
-				_myntcd_create_tmptable('ip', $dates['start'], $dates['stop'], $ip);
+				$tmp_table = _myntcd_create_tmptable('ip', $dates['start'], $dates['stop'], $ip);
 
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				// $SQL = "SELECT date, type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
-				// $SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte FROM tmp_table ";
-				// $SQL .= "GROUP BY month(date), ip, type ORDER BY date DESC";
-				// $result = db_query($SQL);
-
-				$query = db_select('tmp_table', 't')
+				$query = db_select($tmp_table, 't')
 					->fields('t', array('date', 'type'));
 				$query->addExpression('SUM(in_packet)', 'in_packet');
 				$query->addExpression('SUM(out_packet)', 'out_packet');
@@ -776,9 +744,6 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 		db_set_active('myntcd');
 
 		// IP tartomanyok listazasa
-		// $SQL = "SELECT iprange FROM ipranges ORDER BY iprange ASC";
-		// $result = db_query($SQL);
-
 		$query = db_select('ipranges', 'i')
 			->fields('i', array('iprange'))
 			->orderBy('iprange', 'ASC');
@@ -796,7 +761,6 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 			array('data' => l(t('Yearly'), 'myntcd/iprange/all/yearly')),
 		);
 
-		// while ($row = $result->fetchAssoc()) {
 		foreach ($result as $row) {
 			if (_myntcd_is_ip($row->iprange)) {
 				$rows[] = array(
@@ -835,12 +799,6 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 				db_set_active('myntcd');
 
 				if ($iprange == 'all') {
-					// $SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM($nowordaily.in_byte) AS in_byte, ";
-					// $SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
-					// $SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date ";
-					// $SQL .= "GROUP BY ipranges.ipr_id ORDER BY $nowordaily.ip";
-					// $result = db_query($SQL, array(':date' => $dates['date']));
-
 					$query = db_select($nowordaily, 'nord');
 					$query->join('ipranges', 'i', 'i.ipr_id = nord.ipr_id');
 					$query->fields('i', array('ipr_id', 'iprange'));
@@ -854,12 +812,6 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 					$result = $query->execute();
 				} else {
 					// IP tartomanyhoz tartozo napi forgalom
-					// $SQL = "SELECT ipranges.iprange, $nowordaily.ip, SUM($nowordaily.in_byte) AS in_byte, ";
-					// $SQL .= "SUM($nowordaily.out_byte) AS out_byte, SUM($nowordaily.in_byte) + SUM($nowordaily.out_byte) AS total ";
-					// $SQL .= "FROM $nowordaily, ipranges WHERE ipranges.ipr_id = $nowordaily.ipr_id AND date($nowordaily.date) = :date AND ipranges.iprange = :iprange ";
-					// $SQL .= "GROUP BY $nowordaily.ip ORDER BY total DESC";
-					// $result = db_query($SQL, array(':date' => $dates['date'], ':iprange' => $iprange));
-
 					$query = db_select($nowordaily, 'nord');
 					$query->join('ipranges', 'i', 'i.ipr_id = nord.ipr_id');
 					$query
@@ -882,19 +834,13 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 			case 'weekly': // Heti forgalom
 			case 'monthly': // Havi forgalom
 			case 'yearly': // Eves forgalom
-				_myntcd_create_tmptable('iprange', $dates['start'], $dates['stop'], $iprange);
+				$tmp_table = _myntcd_create_tmptable('iprange', $dates['start'], $dates['stop'], $iprange);
 
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
 				if ($iprange == 'all') {
-					// $SQL = "SELECT ipranges.ipr_id, ipranges.iprange, SUM(tmp_table.in_byte) AS in_byte, ";
-					// $SQL .= "SUM(tmp_table.out_byte) AS out_byte, SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
-					// $SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id ";
-					// $SQL .= "GROUP BY ipranges.ipr_id ORDER BY tmp_table.ip";
-					// $result = db_query($SQL);
-
-					$query = db_select('tmp_table', 't');
+					$query = db_select($tmp_table, 't');
 					$query->join('ipranges', 'i', 'i.ipr_id = t.ipr_id');
 					$query->fields('i', array('ipr_id', 'iprange'));
 					$query->addExpression('SUM(t.in_byte)', 'in_byte');
@@ -905,13 +851,7 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 					  ->orderBy('t.ip');
 					$result = $query->execute();
 				} else {
-					// $SQL = "SELECT ipranges.iprange, tmp_table.ip, SUM(tmp_table.in_byte) AS in_byte, SUM(tmp_table.out_byte) AS out_byte, ";
-					// $SQL .= "SUM(tmp_table.in_byte) + SUM(tmp_table.out_byte) AS total ";
-					// $SQL .= "FROM tmp_table, ipranges WHERE ipranges.ipr_id = tmp_table.ipr_id AND ipranges.iprange = :iprange ";
-					// $SQL .= "GROUP BY tmp_table.ip ORDER BY total DESC";
-					// $result = db_query($SQL, array(':iprange' => $iprange));
-
-					$query = db_select('tmp_table', 't');
+					$query = db_select($tmp_table, 't');
 					$query->join('ipranges', 'i', 'i.ipr_id = t.ipr_id');
 					$query
 						->fields('i', array('iprange'))
@@ -974,7 +914,7 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
  */
 function myntcd_top($when = '', $date = '') {
 	if($when == '') {
-		_myntcd_create_tmptable('top', date('Y-01-01'), date('Y-m-d'));
+		$tmp_table = _myntcd_create_tmptable('top', date('Y-01-01'), date('Y-m-d'));
 
 		$array_when = array('daily', 'weekly', 'monthly', 'yearly');
 		foreach ($array_when as $when) {
@@ -986,10 +926,6 @@ function myntcd_top($when = '', $date = '') {
 					db_set_active('myntcd');
 
 					// Napi Top lista
-					// $SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
-					// $SQL .= "FROM now WHERE date(date) = :date GROUP BY ip, date(date) ORDER BY total DESC";
-					// $result = db_query_range($SQL, 0, 20, array(':date' => $dates['date']));
-
 					$query = db_select('now', 'n')
 						->fields('n', array('ip'));
 					$query->addExpression('SUM(in_byte)', 'in_byte');
@@ -1012,11 +948,7 @@ function myntcd_top($when = '', $date = '') {
 					// Kapcsolodas az SQL szerverhez
 					db_set_active('myntcd');
 
-					// $SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
-					// $SQL .= "FROM tmp_table WHERE date >= :start AND date <= :stop GROUP BY ip  ORDER BY total DESC";
-					// $result = db_query_range($SQL, 0, 20, array(':start' => $dates['start'], ':stop' => $dates['stop']));
-
-					$query = db_select('tmp_table', 't')
+					$query = db_select($tmp_table, 't')
 						->fields('t', array('ip'));
 					$query->addExpression('SUM(in_byte)', 'in_byte');
 					$query->addExpression('SUM(out_byte)', 'out_byte');
@@ -1055,7 +987,7 @@ function myntcd_top($when = '', $date = '') {
 
 		_myntcd_set_title('top', t(ucfirst($when)), $dates['start'], $dates['stop']);
 
-		_myntcd_create_tmptable('top', $dates['start'], $dates['stop']);
+		$tmp_table = _myntcd_create_tmptable('top', $dates['start'], $dates['stop']);
 
 		$traffic = array('out_byte' => 'out', 'in_byte' => 'in', 'total' => 'total');
 		foreach ($traffic as $order_by => $table) {
@@ -1072,10 +1004,6 @@ function myntcd_top($when = '', $date = '') {
 					db_set_active('myntcd');
 
 					// Napi Top lista
-					// $SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
-					// $SQL .= "FROM ".$from." WHERE date(date) = :date GROUP BY ip, date(date) ORDER BY ".$order_by." DESC";
-					// $result = db_query_range($SQL, 0, 20, array(':date' => $dates['date']));
-
 					$query = db_select($from, 'nord')
 						->fields('nord', array('ip'));
 					$query->addExpression('SUM(in_byte)', 'in_byte');
@@ -1098,11 +1026,7 @@ function myntcd_top($when = '', $date = '') {
 					// Kapcsolodas az SQL szerverhez
 					db_set_active('myntcd');
 
-					// $SQL = "SELECT ip, SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte, SUM(in_byte) + SUM(out_byte) AS total ";
-					// $SQL .= "FROM tmp_table GROUP BY ip ORDER BY ".$order_by." DESC";
-					// $result = db_query_range($SQL, 0, 20);
-
-					$query = db_select('tmp_table', 't')
+					$query = db_select($tmp_table, 't')
 						->fields('t', array('ip'));
 					$query->addExpression('SUM(in_byte)', 'in_byte');
 					$query->addExpression('SUM(out_byte)', 'out_byte');
@@ -1267,25 +1191,6 @@ function myntcd_filter_add_validate($form, &$form_state) {
 function myntcd_filter_add_submit($form, &$form_state) {
 	// Kapcsolodas az SQL szerverhez
 	db_set_active('myntcd');
-
-	// $sqlvalues = array(
-	// 	':ip' => $form_state['values']['filter_ip'],
-	// 	':blacklist' => $form_state['values']['filter_type'],
-	// 	':comment' => $form_state['values']['filter_comment'],
-	// );
-
-	// $SQL = "INSERT INTO filter (ip, blacklist, comment, date) VALUES (:ip, :blacklist, :comment, ";
-	// if ($form_state['values']['filter_time'] == '-1') {
-	// 	$SQL .= "DEFAULT)";
-	// } else {
-	// 	$filtertime = $form_state['values']['filter_time'] * $form_state['values']['filter_time_interval'];
-	// 	$filtertime = date('Y-m-d', strtotime('+'.$filtertime.' day'));
-
-	// 	$SQL .= ":date)";
-	// 	$sqlvalues[':date'] = $filtertime;
-	// }
-
-	// db_query($SQL, $sqlvalues);
 
 	$sqlvalues = array(
 	    'ip' => $form_state['values']['filter_ip'],
@@ -1675,49 +1580,33 @@ function _myntcd_create_tmptable($from, $start, $stop = '', $ip = '') {
 	// Kapcsolodas az SQL szerverhez
 	db_set_active('myntcd');
 
-	$SQL = "CREATE TEMPORARY TABLE tmp_table ";
-	$SQL .= "( `ip` varchar(39) default NULL, ";
-
-	$SQL2 = "INSERT INTO tmp_table SELECT ip, ";
+	$SQL = "SELECT ip, ";
 
 	if ($from == 'myip' || $from == 'ip' || $from == 'top') {
-		$SQL .= "`date` DATE, ";
-
-		$SQL2 .= "DATE(date), ";
+		$SQL .= "DATE(date) AS date, ";
 	}
 	if ($from == 'ip') {
-		$SQL .= "`type` int(3) NOT NULL default '0', ";
-		$SQL .= " `in_packet` bigint(20) unsigned NOT NULL default '0', ";
-		$SQL .= " `out_packet` bigint(20) unsigned NOT NULL default '0', ";
-
-		$SQL2 .= "type, SUM(in_packet), SUM(out_packet), ";
+		$SQL .= "type, SUM(in_packet) AS in_packet, SUM(out_packet) AS out_packet, ";
 	} elseif ($from == 'iprange') {
-		$SQL .= "`ipr_id` smallint(5) unsigned NOT NULL, ";
-
-		$SQL2 .= "ipr_id, ";
+		$SQL .= "ipr_id, ";
 	}
-	$SQL2 .= "SUM(in_byte), SUM(out_byte) ";
+	$SQL .= "SUM(in_byte) AS in_byte, SUM(out_byte) AS out_byte ";
 
-	$SQL .= " `in_byte` bigint(20) unsigned NOT NULL default '0', ";
-	$SQL .= " `out_byte` bigint(20) unsigned NOT NULL default '0')";
-
-	$SQL3 = $SQL2;
-	$SQL2 .= "FROM now WHERE ";
-	$SQL3 .= "FROM daily WHERE ";
+	$SQL2 = $SQL;
+	$SQL .= "FROM now WHERE ";
+	$SQL2 .= "FROM daily WHERE ";
 	$TMPSQL = "";
 	if ($from == 'myip' || $from == 'ip') {
 		$TMPSQL = "ip = :ip AND ";
 
-		$args2 = array(':ip' => $ip, ':stop' => $stop);
-		$args3 = array(':ip' => $ip, ':start' => $start, ':stop' => $stop);
+		$args = array(':ip' => $ip, ':start' => $start, ':stop' => $stop);
 	} else {
-		$args2 = array(':stop' => $stop);
-		$args3 = array(':start' => $start, ':stop' => $stop);
+		$args = array(':start' => $start, ':stop' => $stop);
 	}
+	$SQL .= $TMPSQL;
+	$SQL .= "DATE(date) = :stop GROUP BY ";
 	$SQL2 .= $TMPSQL;
-	$SQL2 .= "DATE(date) = :stop GROUP BY ";
-	$SQL3 .= $TMPSQL;
-	$SQL3 .= "DATE(date) >= :start AND DATE(date) <= :stop GROUP BY ";
+	$SQL2 .= "DATE(date) >= :start AND DATE(date) <= :stop GROUP BY ";
 	$TMPSQL = "";
 	if ($from == 'myip') {
 		$TMPSQL .= "DATE(date)";
@@ -1727,21 +1616,19 @@ function _myntcd_create_tmptable($from, $start, $stop = '', $ip = '') {
 			$TMPSQL .= ", type";
 		}
 	}
-	$SQL2 .= $TMPSQL;
+	$SQL .= $TMPSQL;
 	if ($from == 'ip' || $from == 'top') {
-		$SQL3 .= $TMPSQL.", date";
+		$SQL2 .= $TMPSQL.", DATE(date)";
 	} else {
-		$SQL3 .= $TMPSQL;
+		$SQL2 .= $TMPSQL;
 	}
 
-	$result = db_query($SQL);
-
-	$result = db_query($SQL2, $args2);
-
-	$result = db_query($SQL3, $args3);
+	$tmp_table = db_query_temporary($SQL." UNION ALL ".$SQL2, $args);
 
 	// Vissza valtas az alapertelmezett SQL szerverhez
 	db_set_active();
+
+	return $tmp_table;
 } // function _myntcd_create_tmptable()
 
 
@@ -1800,7 +1687,6 @@ function _myntcd_process_tabledatas($variables) {
 			}
 		}
 
-		// while ($row = $result->fetchAssoc()) {
 		foreach ($result as $row) {
 			// Linkelhetove alakitja a datumot
 			if ($path == 'myntcd/iprange' || $path == 'myntcd/top') {
@@ -2012,9 +1898,6 @@ function _myntcd_filter_bwform($black_or_white) {
 	// Kapcsolodas az SQL szerverhez
 	db_set_active('myntcd');
 
-	// $SQL = "SELECT * FROM filter WHERE blacklist = :borw ORDER BY date DESC, ip";
-	// $result = db_query($SQL, array(':borw' => $black_or_white));
-
 	$query = db_select('filter', 'f')
 	  ->fields('f')
 	  ->condition('blacklist', $black_or_white)
@@ -2026,27 +1909,21 @@ function _myntcd_filter_bwform($black_or_white) {
 	db_set_active();
 
 	$form['table']['#tree'] = TRUE;
-	// while ($row = $result->fetchAssoc()) {
 	foreach ($result as $row) {
-		// $form['table'][$row['ip']] = array(
 		$form['table'][$row->ip] = array(
 			'chk' => array(
 				'#type' => 'checkbox',
 			),
 			'ip_address' => array(
 				'#type' => 'link',
-				// '#title' => $row['ip'],
 				'#title' => $row->ip,
-				// '#href' => 'myntcd/ip/'.$row['ip'],
 				'#href' => 'myntcd/ip/'.$row->ip,
 			),
 			'end_date' => array(
-				// '#markup' => $row['date'] == '0000-00-00' ? t('for ever') : $row['date'],
 				'#markup' => $row->date == '0000-00-00' ? t('for ever') : $row->date,
 			),
 			'comment' => array(
 				'#type' => 'textfield',
-				// '#default_value' => $row['comment'],
 				'#default_value' => $row->comment,
 			),
 		);
@@ -2089,9 +1966,6 @@ function _myntcd_filter_bwsubmit(&$form_state) {
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				// $SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = :borw";
-				// db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip, ':borw' => $form_state['values']['black_or_white']));
-
 				db_update('filter')
 				  ->fields(array(
 				    'comment' => $items['comment'],
@@ -2106,9 +1980,6 @@ function _myntcd_filter_bwsubmit(&$form_state) {
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				// $SQL = "DELETE FROM filter WHERE ip = :ip AND blacklist = :borw";
-				// db_query($SQL, array(':ip' => $ip, ':borw' => $form_state['values']['black_or_white']));
-
 				db_delete('filter')
 				  ->condition('ip', $ip)
 				  ->condition('blacklist', $form_state['values']['black_or_white'])
@@ -2119,9 +1990,6 @@ function _myntcd_filter_bwsubmit(&$form_state) {
 			} elseif ( $form_state['values']['op'] == t('Add Whitelist') ) {
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
-
-				// $SQL = "UPDATE filter SET blacklist = 0 WHERE ip = :ip AND blacklist = 1";
-				// db_query($SQL, array(':ip' => $ip));
 
 				db_update('filter')
 				  ->fields(array(
