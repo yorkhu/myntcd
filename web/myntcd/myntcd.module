@@ -602,8 +602,8 @@ function myntcd_search_form_submit($form, &$form_state) {
 	// Vissza valtas az alapertelmezett SQL szerverhez
 	db_set_active();
 
-	if ( $ip = $result->fetchAssoc()) {
-		drupal_goto('myntcd/ip/'.$form_state['values']['ip']);
+	if ($ip = $result->fetchAssoc()) {
+		drupal_goto('myntcd/ip/'.$ip['ip']);
 	}
 } // myntcd_search_form_submit()
 
@@ -789,21 +789,22 @@ function myntcd_iprange($iprange = '', $when = '', $date = '') {
 
 		$rows = array();
 		$rows[] = array(
-			array('data' => l(t('All'), 'myntcd/iprange/all') ),
-			array('data' => l(t('Daily'), 'myntcd/iprange/all') ),
-			array('data' => l(t('Weekly'), 'myntcd/iprange/all/weekly') ),
-			array('data' => l(t('Monthly'), 'myntcd/iprange/all/monthly') ),
-			array('data' => l(t('Yearly'), 'myntcd/iprange/all/yearly') ),
+			array('data' => l(t('All'), 'myntcd/iprange/all')),
+			array('data' => l(t('Daily'), 'myntcd/iprange/all')),
+			array('data' => l(t('Weekly'), 'myntcd/iprange/all/weekly')),
+			array('data' => l(t('Monthly'), 'myntcd/iprange/all/monthly')),
+			array('data' => l(t('Yearly'), 'myntcd/iprange/all/yearly')),
 		);
 
-		while ($row = $result->fetchAssoc()) {
-			if ( _myntcd_is_ip($row['iprange']) ) {
+		// while ($row = $result->fetchAssoc()) {
+		foreach ($result as $row) {
+			if (_myntcd_is_ip($row->iprange)) {
 				$rows[] = array(
-					array('data' => l($row['iprange'], 'myntcd/iprange/'.$row['iprange']) ),
-					array('data' => l(t('Daily'), 'myntcd/iprange/'.$row['iprange']) ),
-					array('data' => l(t('Weekly'), 'myntcd/iprange/'.$row['iprange'].'/weekly') ),
-					array('data' => l(t('Monthly'), 'myntcd/iprange/'.$row['iprange'].'/monthly') ),
-					array('data' => l(t('Yearly'), 'myntcd/iprange/'.$row['iprange'].'/yearly') ),
+					array('data' => l($row->iprange, 'myntcd/iprange/'.$row->iprange)),
+					array('data' => l(t('Daily'), 'myntcd/iprange/'.$row->iprange)),
+					array('data' => l(t('Weekly'), 'myntcd/iprange/'.$row->iprange.'/weekly')),
+					array('data' => l(t('Monthly'), 'myntcd/iprange/'.$row->iprange.'/monthly')),
+					array('data' => l(t('Yearly'), 'myntcd/iprange/'.$row->iprange.'/yearly')),
 				);
 			}
 		}
