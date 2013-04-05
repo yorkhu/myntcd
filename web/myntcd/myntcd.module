@@ -1799,70 +1799,71 @@ function _myntcd_process_tabledatas($variables) {
 			}
 		}
 
-		while ($row = $result->fetchAssoc()) {
+		// while ($row = $result->fetchAssoc()) {
+		foreach ($result as $row) {
 			// Linkelhetove alakitja a datumot
 			if ($path == 'myntcd/iprange' || $path == 'myntcd/top') {
 				if ($link) {
 					if ($date != '') {
-						$row[$as] = l($row[$as], $link_path.'/'.$row[$as].'/'.$when.'/'.$date);
+						$row->$as = l($row->$as, $link_path.'/'.$row->$as.'/'.$when.'/'.$date);
 					} else {
-						$row[$as] = l($row[$as], $link_path.'/'.$row[$as].'/'.$when);
+						$row->$as = l($row->$as, $link_path.'/'.$row->$as.'/'.$when);
 					}
 				}
-				$rows[$row[$as]][0]['in_byte'] = $row['in_byte'];
-				$rows[$row[$as]][0]['out_byte'] = $row['out_byte'];
-				$rows[$row[$as]][0]['total_byte'] = $row['total'];
+				$rows[$row->$as][0]['in_byte'] = $row->in_byte;
+				$rows[$row->$as][0]['out_byte'] = $row->out_byte;
+				$rows[$row->$as][0]['total_byte'] = $row->total;
 			} else {
 				switch ($when) {
 					case 'daily':
-						$row['date'] = format_date(strtotime($row['date']), 'custom', 'H:00');
+						$row->date = format_date(strtotime($row->date), 'custom', 'H:00');
 						break;
 					case 'weekly':
 					case 'monthly':
-						$row['date'] = format_date(strtotime($row['date']), 'custom', 'Y-m-d');
+						$row->date = format_date(strtotime($row->date), 'custom', 'Y-m-d');
 						if ($link) {
-							$row['date'] = l($row['date'], $link_path.'/daily/'.$row['date']);
+							$row->date = l($row->date, $link_path.'/daily/'.$row->date);
 						}
 						break;
 					case 'yearly':
-						$format_date = format_date(strtotime($row['date']), 'custom', 'Y. F');
+						$format_date = format_date(strtotime($row->date), 'custom', 'Y. F');
 						if ($link) {
 							$link_date_format = 'Y-m-01';
 
-							$row['date'] = l(
+							$row->date = l(
 								$format_date,
-								$link_path.'/monthly/'.date($link_date_format, strtotime($row['date']))
+								$link_path.'/monthly/'.date($link_date_format, strtotime($row->date))
 							);
 						} else {
-							$row['date'] = $format_date;
+							$row->date = $format_date;
 						}
 						break;
 				}
 
 				// a teljes forgalom novelese
 				if ($path == 'myntcd/ip') {
-					$total_packet = $row['in_packet'] + $row['out_packet'];
+					$total_packet = $row->in_packet + $row->out_packet;
 
-					$rows['total'][0]['in_packet'] += $row['in_packet'];
-					$rows['total'][0]['out_packet'] += $row['out_packet'];
+					$rows['total'][0]['in_packet'] += $row->in_packet;
+					$rows['total'][0]['out_packet'] += $row->out_packet;
 					$rows['total'][0]['total_packet'] += $total_packet;
 				}
 
-				$total_byte = $row['in_byte'] + $row['out_byte'];
+				$total_byte = $row->in_byte + $row->out_byte;
 
-				$rows['total'][0]['in_byte'] += $row['in_byte'];
-				$rows['total'][0]['out_byte'] += $row['out_byte'];
+				$rows['total'][0]['in_byte'] += $row->in_byte;
+				$rows['total'][0]['out_byte'] += $row->out_byte;
 				$rows['total'][0]['total_byte'] += $total_byte;
 
 				if ($path == 'myntcd/ip') {
 					$exist = FALSE;
 					foreach ($rows['total'] as $key => $value) {
-						if ($key == $row['type']) {
+						if ($key == $row->type) {
 							$exist = TRUE;
 						}
 					}
 					if (!$exist) {
-						$rows['total'][$row['type']] = array(
+						$rows['total'][$row->type] = array(
 							'date' => '',
 							'in_packet' => 0,
 							'out_packet' => 0,
@@ -1873,19 +1874,19 @@ function _myntcd_process_tabledatas($variables) {
 						);
 					}
 
-					$rows['total'][$row['type']]['in_packet'] += $row['in_packet'];
-					$rows['total'][$row['type']]['out_packet'] += $row['out_packet'];
-					$rows['total'][$row['type']]['total_packet'] += $total_packet;
-					$rows['total'][$row['type']]['in_byte'] += $row['in_byte'];
-					$rows['total'][$row['type']]['out_byte'] += $row['out_byte'];
-					$rows['total'][$row['type']]['total_byte'] += $total_byte;
+					$rows['total'][$row->type]['in_packet'] += $row->in_packet;
+					$rows['total'][$row->type]['out_packet'] += $row->out_packet;
+					$rows['total'][$row->type]['total_packet'] += $total_packet;
+					$rows['total'][$row->type]['in_byte'] += $row->in_byte;
+					$rows['total'][$row->type]['out_byte'] += $row->out_byte;
+					$rows['total'][$row->type]['total_byte'] += $total_byte;
 				}
 
 				if (!$only_total) {
-					if ($date != $row['date']) {
-						$date = $row['date'];
+					if ($date != $row->date) {
+						$date = $row->date;
 
-						$rows[$row['date']][0] = array(
+						$rows[$row->date][0] = array(
 							'date' => $date,
 							'in_packet' => 0,
 							'out_packet' => 0,
@@ -1897,24 +1898,24 @@ function _myntcd_process_tabledatas($variables) {
 					}
 
 					if ($path == 'myntcd/ip') {
-						$rows[$row['date']][0]['in_packet'] += $row['in_packet'];
-						$rows[$row['date']][0]['out_packet'] += $row['out_packet'];
-						$rows[$row['date']][0]['total_packet'] += $total_packet;
+						$rows[$row->date][0]['in_packet'] += $row->in_packet;
+						$rows[$row->date][0]['out_packet'] += $row->out_packet;
+						$rows[$row->date][0]['total_packet'] += $total_packet;
 					}
 
-					$rows[$row['date']][0]['in_byte'] += $row['in_byte'];
-					$rows[$row['date']][0]['out_byte'] += $row['out_byte'];
-					$rows[$row['date']][0]['total_byte'] += $total_byte;
+					$rows[$row->date][0]['in_byte'] += $row->in_byte;
+					$rows[$row->date][0]['out_byte'] += $row->out_byte;
+					$rows[$row->date][0]['total_byte'] += $total_byte;
 
 					if ($path == 'myntcd/ip') {
 						// tablazat soranak elokeszitese
-						$rows[$row['date']][$row['type']] = array(
+						$rows[$row->date][$row->type] = array(
 							'date' => '',
-							'in_packet' => $row['in_packet'],
-							'out_packet' => $row['out_packet'],
+							'in_packet' => $row->in_packet,
+							'out_packet' => $row->out_packet,
 							'total_packet' => $total_packet,
-							'in_byte' => $row['in_byte'],
-							'out_byte' => $row['out_byte'],
+							'in_byte' => $row->in_byte,
+							'out_byte' => $row->out_byte,
 							'total_byte' => $total_byte,
 						);
 					}
