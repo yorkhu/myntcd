@@ -2087,8 +2087,16 @@ function _myntcd_filter_bwsubmit(&$form_state) {
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				$SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = :borw";
-				db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip, ':borw' => $form_state['values']['black_or_white']));
+				// $SQL = "UPDATE filter SET comment = :comment WHERE ip = :ip AND blacklist = :borw";
+				// db_query($SQL, array(':comment' => $items['comment'], ':ip' => $ip, ':borw' => $form_state['values']['black_or_white']));
+
+				db_update('filter')
+				  ->fields(array(
+				    'comment' => $items['comment'],
+				  ))
+				  ->condition('ip', $ip)
+				  ->condition('blacklist', $form_state['values']['black_or_white'])
+				  ->execute();
 
 				// Vissza valtas az alapertelmezett SQL szerverhez
 				db_set_active();
@@ -2096,8 +2104,13 @@ function _myntcd_filter_bwsubmit(&$form_state) {
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				$SQL = "DELETE FROM filter WHERE ip = :ip AND blacklist = :borw";
-				db_query($SQL, array(':ip' => $ip, ':borw' => $form_state['values']['black_or_white']));
+				// $SQL = "DELETE FROM filter WHERE ip = :ip AND blacklist = :borw";
+				// db_query($SQL, array(':ip' => $ip, ':borw' => $form_state['values']['black_or_white']));
+
+				db_delete('filter')
+				  ->condition('ip', $ip)
+				  ->condition('blacklist', $form_state['values']['black_or_white'])
+				  ->execute();
 
 				// Vissza valtas az alapertelmezett SQL szerverhez
 				db_set_active();
@@ -2105,8 +2118,16 @@ function _myntcd_filter_bwsubmit(&$form_state) {
 				// Kapcsolodas az SQL szerverhez
 				db_set_active('myntcd');
 
-				$SQL = "UPDATE filter SET blacklist = 0 WHERE ip = :ip AND blacklist = 1";
-				db_query($SQL, array(':ip' => $ip));
+				// $SQL = "UPDATE filter SET blacklist = 0 WHERE ip = :ip AND blacklist = 1";
+				// db_query($SQL, array(':ip' => $ip));
+
+				db_update('filter')
+				  ->fields(array(
+				    'blacklist' => 0,
+				  ))
+				  ->condition('ip', $ip)
+				  ->condition('blacklist', 1)
+				  ->execute();
 
 				// Vissza valtas az alapertelmezett SQL szerverhez
 				db_set_active();
